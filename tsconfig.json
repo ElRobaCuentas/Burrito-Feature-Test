@@ -1,7 +1,28 @@
+// {
+//   "extends": "@react-native/typescript-config",
+//   "compilerOptions": {
+//     "types": ["jest"],
+//   },
+//   "include": ["**/*.ts", "**/*.tsx"],
+//   "exclude": ["**/node_modules", "**/Pods"]
+// }
+
+
+
+/****************************************************************************************************/
+
+
+
 {
   "extends": "@react-native/typescript-config",
   "compilerOptions": {
     "types": ["jest"],
+    
+    // 👇 AGREGA ESTO PARA QUE VS CODE TE GRITE LOS ERRORES
+    "strict": true,                 // Activa todas las verificaciones estrictas
+    "noImplicitReturns": true,      // Te obliga a que todas las rutas devuelvan valor
+    "noImplicitAny": true,          // Prohíbe el tipo 'any' si no lo escribes tú
+    "strictNullChecks": true        // Te avisa si algo puede ser null y no lo controlaste
   },
   "include": ["**/*.ts", "**/*.tsx"],
   "exclude": ["**/node_modules", "**/Pods"]
