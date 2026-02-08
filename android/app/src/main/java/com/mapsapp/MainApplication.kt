@@ -1,4 +1,4 @@
-package com.mapsapp
+package com.burritofeaturetest
 
 import android.app.Application
 import com.facebook.react.PackageList

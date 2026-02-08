@@ -1,4 +1,4 @@
-import { StyleSheet, View } from 'react-native'
+import { ActivityIndicator, StyleSheet, View } from 'react-native'
 import { useLocationStore } from '../../store/location/useLocationStore';
 import { LoadingScreen } from '../loading/LoadingScreen';
 import { Map } from '../../components/maps/Map';
@@ -51,7 +51,11 @@ export const MapScreen = () => {
     */}
 
   if(lastknowLocation === null) {
-    return ( <LoadingScreen /> )
+    return (
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+        <ActivityIndicator size="large" color="black" />
+      </View>
+    )
   }
 
 

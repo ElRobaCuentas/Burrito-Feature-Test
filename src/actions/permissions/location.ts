@@ -37,13 +37,13 @@ export const requestLocationPermission = async(): Promise<PermissionStatus> => {
         // return 'unavailable' NO DISPONIBLE. Puede ser, pero si alguien lanza esto en la web tiene más sentido, simplemente la plaltaforma no concuerda
     }
 
-    if( status === 'blocked' ) {
-        await openSettings();  //va a abrir las settings del dispositivo para que el usuario manualmente abra la app y habilite el location
+    // if( status === 'blocked' ) {
+    //     await openSettings();  //va a abrir las settings del dispositivo para que el usuario manualmente abra la app y habilite el location
 
-        //cuando la persona regresa (ya otorgó el permiso manualmente desde las settings del telefono) podemos hacer un return de...
-        //esto lo hace con el check...
-        return await checkLocationPermission();
-    }
+    //     //cuando la persona regresa (ya otorgó el permiso manualmente desde las settings del telefono) podemos hacer un return de...
+    //     //esto lo hace con el check...
+    //     return await checkLocationPermission();
+    // }
 
 
     //Supongamos que la persona le de el acceso.
