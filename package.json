@@ -1,5 +1,5 @@
 {
-  "name": "BurritoFeatureTest",
+  "name": "BurritoUserApp",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -10,6 +10,8 @@
     "test": "jest"
   },
   "dependencies": {
+    "@react-native-firebase/app": "^23.8.6",
+    "@react-native-firebase/database": "^23.8.6",
     "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-native/new-app-screen": "0.83.1",
     "@react-navigation/native": "^7.1.28",

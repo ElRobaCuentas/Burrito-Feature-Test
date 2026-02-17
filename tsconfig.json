@@ -1,29 +1,27 @@
-// {
-//   "extends": "@react-native/typescript-config",
-//   "compilerOptions": {
-//     "types": ["jest"],
-//   },
-//   "include": ["**/*.ts", "**/*.tsx"],
-//   "exclude": ["**/node_modules", "**/Pods"]
-// }
-
-
-
-/****************************************************************************************************/
-
-
-
 {
-  "extends": "@react-native/typescript-config",
   "compilerOptions": {
-    "types": ["jest"],
-    
-    // 👇 AGREGA ESTO PARA QUE VS CODE TE GRITE LOS ERRORES
-    "strict": true,                 // Activa todas las verificaciones estrictas
-    "noImplicitReturns": true,      // Te obliga a que todas las rutas devuelvan valor
-    "noImplicitAny": true,          // Prohíbe el tipo 'any' si no lo escribes tú
-    "strictNullChecks": true        // Te avisa si algo puede ser null y no lo controlaste
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "target": "esnext",
+    "module": "esnext",
+    "lib": ["es2017"],
+    "isolatedModules": true,
+
+    "jsx": "react-native",
+
+    "strict": true,
+    "noImplicitReturns": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true
   },
   "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["**/node_modules", "**/Pods"]
+  "exclude": [
+    "node_modules",
+    "babel.config.js",
+    "metro.config.js",
+    "jest.config.js"
+  ]
 }
