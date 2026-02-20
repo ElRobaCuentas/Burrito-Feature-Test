@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+// ✅ Importamos MapMarker para el tipado de las refs
 import MapView, { PROVIDER_GOOGLE, Marker, Callout, Polyline, AnimatedRegion, Region, MapMarker } from 'react-native-maps';
 import { Image, StyleSheet, View } from 'react-native';
 import { BurritoLocation } from '../types';
@@ -28,6 +29,8 @@ const isOutsideBounds = (region: Region) => (
 export const Map = ({ burritoLocation }: Props) => {
   const mapRef = useRef<MapView>(null);
   const isAnimatingRef = useRef(false);
+  
+  // ✅ CORRECCIÓN 1: Usamos MapMarker como tipo para la referencia
   const markerRefs = useRef<{ [key: string]: MapMarker | null }>({});
 
   const burritoPosition = useRef(
@@ -81,10 +84,13 @@ export const Map = ({ burritoLocation }: Props) => {
         {PARADEROS.map((p) => (
           <Marker
             key={p.id} 
-            ref={(ref) => { markerRefs.current[p.id] = ref; }}
+            // ✅ CORRECCIÓN 2: Función ref ajustada para que no devuelva valor (void)
+            ref={(ref) => {
+              markerRefs.current[p.id] = ref;
+            }}
             coordinate={{ latitude: p.latitude, longitude: p.longitude }}
             anchor={{ x: 0.5, y: 1 }}
-            tracksViewChanges={false} // ✅ Como las imágenes son locales, el mapa puede ser súper rápido
+            tracksViewChanges={false} 
           >
             <View style={styles.iconContainer}>
               <Icon
@@ -95,16 +101,13 @@ export const Map = ({ burritoLocation }: Props) => {
               />
             </View>
 
-            {/* ✅ Burbuja NATIVA. Se cierra al tocarla gracias a la referencia */}
             <Callout 
               tooltip 
               onPress={() => markerRefs.current[p.id]?.hideCallout()}
             >
-              <StopCard 
-                title={p.name} 
-                imageSource={p.image} // Pasamos la imagen local
-              />
+              <StopCard title={p.name} />
             </Callout>
+
           </Marker>
         ))}
 
@@ -128,8 +131,17 @@ export const Map = ({ burritoLocation }: Props) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { ...StyleSheet.absoluteFillObject },
-  iconContainer: { width: 40, height: 40, justifyContent: 'center', alignItems: 'center' },
-  iconShadow: { textShadowColor: 'rgba(255, 255, 255, 0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8 },
+  iconContainer: { 
+    width: 40, 
+    height: 40, 
+    justifyContent: 'center', 
+    alignItems: 'center' 
+  },
+  iconShadow: {
+    textShadowColor: 'rgba(255, 255, 255, 0.9)',
+    textShadowOffset: { width: 0, height: 0 },
+    textShadowRadius: 8,
+  },
   busContainer: { width: 45, height: 45 },
   busImage: { width: '100%', height: '100%', resizeMode: 'contain' },
 });
