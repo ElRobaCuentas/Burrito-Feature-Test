@@ -1,9 +1,10 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef, useEffect, useState } from 'react';
 import MapView, { PROVIDER_GOOGLE, Marker, Callout, Polyline, AnimatedRegion, Region, MapMarker } from 'react-native-maps';
 import { Image, StyleSheet, View } from 'react-native';
 import { BurritoLocation } from '../types';
 import { COLORS } from '../../../shared/theme/colors';
 import { StopCard } from './StopCard';
+import { FAB } from './FAB';
 import { 
   UNMSM_LOCATION, 
   RUTA_OFICIAL, 
@@ -28,8 +29,9 @@ const isOutsideBounds = (region: Region) => (
 export const Map = ({ burritoLocation }: Props) => {
   const mapRef = useRef<MapView>(null);
   const isAnimatingRef = useRef(false);
-  
   const markerRefs = useRef<{ [key: string]: MapMarker | null }>({});
+
+  const [isFollowingBus, setIsFollowingBus] = useState(true);
 
   const burritoPosition = useRef(
     new AnimatedRegion({
@@ -48,12 +50,39 @@ export const Map = ({ burritoLocation }: Props) => {
         duration: 2500,
         useNativeDriver: false,
       } as any).start();
+
+      if (isFollowingBus) {
+        mapRef.current?.animateToRegion({
+          latitude: burritoLocation.latitude,
+          longitude: burritoLocation.longitude,
+          latitudeDelta: 0.001, 
+          longitudeDelta: 0.004,
+        }, 1000);
+      }
     }
-  }, [burritoLocation]);
+  }, [burritoLocation, isFollowingBus]);
+
+  const handleFollowBus = () => {
+    setIsFollowingBus(true);
+    if (burritoLocation) {
+      mapRef.current?.animateToRegion({
+        latitude: burritoLocation.latitude,
+        longitude: burritoLocation.longitude,
+        latitudeDelta: 0.005,
+        longitudeDelta: 0.005,
+      }, 1000);
+    }
+  };
+
+  const handleCenterMap = () => {
+    setIsFollowingBus(false); 
+    mapRef.current?.animateToRegion(UNMSM_LOCATION, 1000); // Vista global
+  };
 
   const handleRegionChangeComplete = (region: Region) => {
     if (isAnimatingRef.current) return;
     if (isOutsideBounds(region)) {
+      setIsFollowingBus(false); 
       isAnimatingRef.current = true;
       mapRef.current?.animateToRegion(UNMSM_LOCATION, 600);
       setTimeout(() => { isAnimatingRef.current = false; }, 700);
@@ -70,6 +99,7 @@ export const Map = ({ burritoLocation }: Props) => {
         minZoomLevel={15}
         moveOnMarkerPress={false} 
         onRegionChangeComplete={handleRegionChangeComplete}
+        onPanDrag={() => setIsFollowingBus(false)} 
       >
         <Polyline
           coordinates={RUTA_OFICIAL}
@@ -84,12 +114,10 @@ export const Map = ({ burritoLocation }: Props) => {
         {PARADEROS.map((p) => (
           <Marker
             key={p.id} 
-            ref={(ref) => {
-              markerRefs.current[p.id] = ref;
-            }}
+            ref={(ref) => { if (ref) markerRefs.current[p.id] = ref; }}
             coordinate={{ latitude: p.latitude, longitude: p.longitude }}
             anchor={{ x: 0.5, y: 1 }}
-            calloutAnchor={{ x: 0.8, y: 0.8}} 
+            calloutAnchor={{ x: 0.5, y: 0.15 }} 
             tracksViewChanges={false} 
             zIndex={10}
             onPress={(e) => {
@@ -98,24 +126,15 @@ export const Map = ({ burritoLocation }: Props) => {
             }}
           >
             <View style={styles.iconContainer}>
-              <Icon
-                name="map-marker-radius"
-                size={35}
-                color={COLORS.primary} 
-                style={styles.iconShadow}
-              />
+              <Icon name="map-marker-radius" size={35} color={COLORS.primary} style={styles.iconShadow} />
             </View>
 
-            <Callout 
-              tooltip 
-              onPress={(e) => {
+            <Callout tooltip onPress={(e) => {
                 e.stopPropagation();
                 markerRefs.current[p.id]?.hideCallout();
-              }}
-            >
+            }}>
               <StopCard title={p.name} />
             </Callout>
-
           </Marker>
         ))}
 
@@ -132,6 +151,13 @@ export const Map = ({ burritoLocation }: Props) => {
           </Marker.Animated>
         )}
       </MapView>
+
+      <FAB 
+        isFollowingBus={isFollowingBus}
+        onFollowBus={handleFollowBus}
+        onCenterMap={handleCenterMap}
+      />
+      
     </View>
   );
 };

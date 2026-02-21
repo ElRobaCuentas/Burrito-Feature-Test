@@ -1,43 +1,64 @@
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native'
-import  Icon  from 'react-native-vector-icons/Ionicons';
+import React from 'react';
+import { View, TouchableOpacity, StyleSheet } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+import { COLORS } from '../../../shared/theme/colors';
 
-interface Props {
-    iconName: string;
-    onPress: () => void;
-    style?: StyleProp<ViewStyle>
+interface FABProps {
+  isFollowingBus: boolean;
+  onFollowBus: () => void;
+  onCenterMap: () => void;
 }
 
-
-
-export const FAB = ({iconName, onPress, style}:Props) => {
+export const FAB = ({ isFollowingBus, onFollowBus, onCenterMap }: FABProps) => {
   return (
-    <View style={[ styles.btn, style ]} >
-        <Pressable
-            onPress={ onPress }        
-        > 
-            <Icon 
-                name={iconName}
-                size={30}
-                color='white'
-            />
-        </Pressable>
+    <View style={styles.container}>
+      
+      <TouchableOpacity 
+        style={styles.button} 
+        onPress={onCenterMap} 
+        activeOpacity={0.8}
+      >
+        <Icon name="map-outline" size={24} color="#1A1A1A" />
+      </TouchableOpacity>
+
+      <TouchableOpacity 
+        style={[styles.button, isFollowingBus && styles.buttonActive]} 
+        onPress={onFollowBus} 
+        activeOpacity={0.8}
+      >
+        <Icon 
+          name={isFollowingBus ? "crosshairs-gps" : "crosshairs"} 
+          size={24} 
+          color={isFollowingBus ? "#FFFFFF" : "#1A1A1A"} 
+        />
+      </TouchableOpacity>
+
     </View>
-  )
-}
+  );
+};
 
 const styles = StyleSheet.create({
-    
-    btn: {
-        zIndex: 1,
-        position: 'absolute',
-        height: 50, 
-        width: 50,
-        borderRadius: 30,
-        backgroundColor: 'black',
-        justifyContent: 'center',
-        alignItems: 'center',
-        shadowOpacity: 0.3,
-    }
-
-
-})
+  container: {
+    position: 'absolute',
+    bottom: 40, 
+    right: 20,
+    flexDirection: 'column',
+  },
+  button: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: '#FFFFFF',
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    elevation: 5,
+    marginBottom: 15, 
+  },
+  buttonActive: {
+    backgroundColor: COLORS.primary, // Se pinta de azul cuando está siguiendo al bus
+  }
+});
