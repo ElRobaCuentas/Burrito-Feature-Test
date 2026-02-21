@@ -4,7 +4,9 @@ import { Image, StyleSheet, View } from 'react-native';
 import { BurritoLocation } from '../types';
 import { COLORS } from '../../../shared/theme/colors';
 import { StopCard } from './StopCard';
-import { FAB } from './FAB';
+import { FAB } from './FAB'; 
+import { useThemeStore } from '../../../store/themeStore'; 
+import { darkMapStyle } from '../constants/mapTheme'; 
 import { 
   UNMSM_LOCATION, 
   RUTA_OFICIAL, 
@@ -14,6 +16,9 @@ import {
 } from '../constants/map_route';
 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
+
+// ⚓ REFERENCIA ESTABLE: Esto evita que el mapa se recargue al volver a blanco
+const lightMapStyle: any[] = []; 
 
 interface Props {
   burritoLocation: BurritoLocation | null;
@@ -30,8 +35,9 @@ export const Map = ({ burritoLocation }: Props) => {
   const mapRef = useRef<MapView>(null);
   const isAnimatingRef = useRef(false);
   const markerRefs = useRef<{ [key: string]: MapMarker | null }>({});
-
+  
   const [isFollowingBus, setIsFollowingBus] = useState(true);
+  const { isDarkMode } = useThemeStore();
 
   const burritoPosition = useRef(
     new AnimatedRegion({
@@ -55,8 +61,8 @@ export const Map = ({ burritoLocation }: Props) => {
         mapRef.current?.animateToRegion({
           latitude: burritoLocation.latitude,
           longitude: burritoLocation.longitude,
-          latitudeDelta: 0.001, 
-          longitudeDelta: 0.004,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
         }, 1000);
       }
     }
@@ -75,14 +81,14 @@ export const Map = ({ burritoLocation }: Props) => {
   };
 
   const handleCenterMap = () => {
-    setIsFollowingBus(false); 
-    mapRef.current?.animateToRegion(UNMSM_LOCATION, 1000); // Vista global
+    setIsFollowingBus(false);
+    mapRef.current?.animateToRegion(UNMSM_LOCATION, 1000);
   };
 
   const handleRegionChangeComplete = (region: Region) => {
     if (isAnimatingRef.current) return;
     if (isOutsideBounds(region)) {
-      setIsFollowingBus(false); 
+      setIsFollowingBus(false);
       isAnimatingRef.current = true;
       mapRef.current?.animateToRegion(UNMSM_LOCATION, 600);
       setTimeout(() => { isAnimatingRef.current = false; }, 700);
@@ -100,6 +106,8 @@ export const Map = ({ burritoLocation }: Props) => {
         moveOnMarkerPress={false} 
         onRegionChangeComplete={handleRegionChangeComplete}
         onPanDrag={() => setIsFollowingBus(false)} 
+        // ⚡ MAPA FLUIDO: Usa nuestras dos referencias estables en memoria
+        customMapStyle={isDarkMode ? darkMapStyle : lightMapStyle} 
       >
         <Polyline
           coordinates={RUTA_OFICIAL}
@@ -157,7 +165,6 @@ export const Map = ({ burritoLocation }: Props) => {
         onFollowBus={handleFollowBus}
         onCenterMap={handleCenterMap}
       />
-      
     </View>
   );
 };
@@ -165,17 +172,8 @@ export const Map = ({ burritoLocation }: Props) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { ...StyleSheet.absoluteFillObject },
-  iconContainer: { 
-    width: 45, 
-    height: 45, 
-    justifyContent: 'center', 
-    alignItems: 'center' 
-  },
-  iconShadow: {
-    textShadowColor: 'rgba(255, 255, 255, 0.9)',
-    textShadowOffset: { width: 0, height: 0 },
-    textShadowRadius: 8,
-  },
+  iconContainer: { width: 45, height: 45, justifyContent: 'center', alignItems: 'center' },
+  iconShadow: { textShadowColor: 'rgba(255, 255, 255, 0.9)', textShadowOffset: { width: 0, height: 0 }, textShadowRadius: 8 },
   busContainer: { width: 45, height: 45 },
   busImage: { width: '100%', height: '100%', resizeMode: 'contain' },
 });

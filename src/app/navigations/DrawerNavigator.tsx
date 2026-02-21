@@ -1,28 +1,52 @@
 import React from 'react';
 import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
-import { View, Text, StyleSheet } from 'react-native';
-import { BottomTabNavigator } from './BottomTabNavigator';
+import { View, Text, StyleSheet, Switch } from 'react-native';
+import { MapScreen } from '../../features/map/screen/MapScreen';
 import { COLORS } from '../../shared/theme/colors';
+import { useThemeStore } from '../../store/themeStore';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Drawer = createDrawerNavigator();
 
-// 🦴 EL ESQUELETO DEL MENÚ LATERAL
 const CustomDrawerContent = (props: any) => {
+  const { isDarkMode, toggleTheme } = useThemeStore();
+
+  // 🦎 EL CAMALEÓN: Definimos los colores dinámicamente según el tema
+  const bgColor = isDarkMode ? '#1E1E1E' : '#FFFFFF';
+  const textColor = isDarkMode ? '#FFFFFF' : '#1A1A1A';
+  const subTextColor = isDarkMode ? '#A0A0A0' : '#666666';
+  const dividerColor = isDarkMode ? '#333333' : '#F0F0F0';
+  const iconColor = isDarkMode ? COLORS.primary : '#555555';
+
   return (
-    <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: 0 }}>
+    <DrawerContentScrollView 
+      {...props} 
+      contentContainerStyle={{ paddingTop: 0 }}
+      style={{ backgroundColor: bgColor }} // 👈 Fondo del Drawer cambia aquí
+    >
+      {/* 👤 PERFIL */}
       <View style={styles.drawerHeader}>
-        {/* Foto de Portada (Cover) */}
         <View style={styles.coverPhoto} />
-        
-        {/* Info del Usuario */}
         <View style={styles.userInfoSection}>
-          <View style={styles.avatar} />
-          <Text style={styles.userName}>Juan Pérez</Text>
-          <Text style={styles.userEmail}>juan.perez@unmsm.edu.pe</Text>
+          <View style={[styles.avatar, { borderColor: bgColor }]} />
+          <Text style={[styles.userName, { color: textColor }]}>Juan Pérez</Text>
+          <Text style={[styles.userEmail, { color: subTextColor }]}>juan.perez@unmsm.edu.pe</Text>
         </View>
       </View>
 
-      {/* Aquí irían las futuras opciones (Historial, Configuración, etc.) */}
+      {/* 🌙 PALANCA MODO OSCURO */}
+      <View style={[styles.themeSection, { borderTopColor: dividerColor }]}>
+        <View style={styles.themeRow}>
+          <Icon name="weather-night" size={24} color={iconColor} />
+          <Text style={[styles.themeText, { color: textColor }]}>Modo Oscuro</Text>
+        </View>
+        <Switch
+          value={isDarkMode}
+          onValueChange={toggleTheme}
+          trackColor={{ false: '#555555', true: COLORS.primary }}
+          thumbColor={'#FFFFFF'}
+        />
+      </View>
     </DrawerContentScrollView>
   );
 };
@@ -32,36 +56,34 @@ export const DrawerNavigator = () => {
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
-        headerShown: false, // El botón hamburguesa lo haremos nosotros a mano
-        drawerStyle: { width: 280 }, // Ancho profesional
+        headerShown: false,
+        drawerStyle: { width: 280 },
+        // 🛡️ LA BARRERA: 'front' hace que el menú flote por encima del mapa sin empujarlo
+        drawerType: 'front', 
       }}
     >
-      {/* El Drawer envuelve a los Tabs */}
-      <Drawer.Screen name="MainTabs" component={BottomTabNavigator} />
+      <Drawer.Screen name="MapScreen" component={MapScreen} />
     </Drawer.Navigator>
   );
 };
 
+// Dejamos solo los estilos estructurales. Los colores los maneja el Camaleón arriba.
 const styles = StyleSheet.create({
   drawerHeader: { marginBottom: 20 },
-  coverPhoto: { 
-    height: 140, 
-    backgroundColor: COLORS.primary, // Temporal hasta que haya imagen
-    opacity: 0.8 
+  coverPhoto: { height: 140, backgroundColor: COLORS.primary, opacity: 0.8 },
+  userInfoSection: { paddingHorizontal: 20, marginTop: -40 },
+  avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#E0E0E0', borderWidth: 3, elevation: 5 },
+  userName: { fontSize: 18, fontWeight: 'bold', marginTop: 10 },
+  userEmail: { fontSize: 14 },
+  themeSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 15,
+    borderTopWidth: 1,
+    marginTop: 10,
   },
-  userInfoSection: { 
-    paddingHorizontal: 20, 
-    marginTop: -40 // Esto hace que el avatar "muerda" la portada
-  },
-  avatar: { 
-    width: 80, 
-    height: 80, 
-    borderRadius: 40, 
-    backgroundColor: '#E0E0E0', 
-    borderWidth: 3, 
-    borderColor: '#FFFFFF',
-    elevation: 5,
-  },
-  userName: { fontSize: 18, fontWeight: 'bold', color: '#1A1A1A', marginTop: 10 },
-  userEmail: { fontSize: 14, color: '#666666' },
+  themeRow: { flexDirection: 'row', alignItems: 'center' },
+  themeText: { fontSize: 16, marginLeft: 15, fontWeight: '500' }
 });
