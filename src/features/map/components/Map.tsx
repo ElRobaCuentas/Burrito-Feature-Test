@@ -1,5 +1,4 @@
 import React, { useRef, useEffect } from 'react';
-// ✅ Importamos MapMarker para el tipado de las refs
 import MapView, { PROVIDER_GOOGLE, Marker, Callout, Polyline, AnimatedRegion, Region, MapMarker } from 'react-native-maps';
 import { Image, StyleSheet, View } from 'react-native';
 import { BurritoLocation } from '../types';
@@ -30,7 +29,6 @@ export const Map = ({ burritoLocation }: Props) => {
   const mapRef = useRef<MapView>(null);
   const isAnimatingRef = useRef(false);
   
-  // ✅ CORRECCIÓN 1: Usamos MapMarker como tipo para la referencia
   const markerRefs = useRef<{ [key: string]: MapMarker | null }>({});
 
   const burritoPosition = useRef(
@@ -79,18 +77,25 @@ export const Map = ({ burritoLocation }: Props) => {
           strokeWidth={6}
           lineCap="round"
           lineJoin="round"
+          tappable={false} 
+          zIndex={-1}
         />
 
         {PARADEROS.map((p) => (
           <Marker
             key={p.id} 
-            // ✅ CORRECCIÓN 2: Función ref ajustada para que no devuelva valor (void)
             ref={(ref) => {
               markerRefs.current[p.id] = ref;
             }}
             coordinate={{ latitude: p.latitude, longitude: p.longitude }}
             anchor={{ x: 0.5, y: 1 }}
+            calloutAnchor={{ x: 0.8, y: 0.8}} 
             tracksViewChanges={false} 
+            zIndex={10}
+            onPress={(e) => {
+              e.stopPropagation(); 
+              markerRefs.current[p.id]?.showCallout();
+            }}
           >
             <View style={styles.iconContainer}>
               <Icon
@@ -103,7 +108,10 @@ export const Map = ({ burritoLocation }: Props) => {
 
             <Callout 
               tooltip 
-              onPress={() => markerRefs.current[p.id]?.hideCallout()}
+              onPress={(e) => {
+                e.stopPropagation();
+                markerRefs.current[p.id]?.hideCallout();
+              }}
             >
               <StopCard title={p.name} />
             </Callout>
@@ -132,8 +140,8 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   map: { ...StyleSheet.absoluteFillObject },
   iconContainer: { 
-    width: 40, 
-    height: 40, 
+    width: 45, 
+    height: 45, 
     justifyContent: 'center', 
     alignItems: 'center' 
   },
