@@ -2,12 +2,14 @@ import React, { useEffect } from 'react';
 import { StyleSheet, View, TouchableOpacity, SafeAreaView } from 'react-native';
 import { Map } from '../components/Map';
 import { useBurritoStore } from '../../../store/burritoLocationStore';
+import { useThemeStore } from '../../../store/themeStore'; // 👈 Importamos el tema aquí
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { COLORS } from '../../../shared/theme/colors';
 
 export const MapScreen = () => {
   const { location, actions } = useBurritoStore();
+  const { isDarkMode } = useThemeStore(); // 👈 Obtenemos el estado
   const navigation = useNavigation();
 
   useEffect(() => {
@@ -17,7 +19,8 @@ export const MapScreen = () => {
 
   return (
     <View style={styles.container}>
-      <Map burritoLocation={location} />
+      {/* 👇 Pasamos el tema como propiedad */}
+      <Map burritoLocation={location} isDarkMode={isDarkMode} /> 
 
       <SafeAreaView style={styles.hamburgerContainer}>
         <TouchableOpacity 
@@ -33,15 +36,6 @@ export const MapScreen = () => {
 
 const styles = StyleSheet.create({
   container: { ...StyleSheet.absoluteFillObject },
-  hamburgerContainer: {
-    position: 'absolute',
-    top: 40,
-    left: 20,
-    zIndex: 100,
-  },
-  iconShadow: {
-    textShadowColor: 'rgba(255, 255, 255, 0.9)',
-    textShadowOffset: { width: 0, height: 1 },
-    textShadowRadius: 4,
-  }
+  hamburgerContainer: { position: 'absolute', top: 40, left: 20, zIndex: 100 },
+  iconShadow: { textShadowColor: 'rgba(255, 255, 255, 0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }
 });

@@ -1,68 +1,53 @@
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, memo } from 'react';
 import MapView, { PROVIDER_GOOGLE, Marker, Callout, Polyline, AnimatedRegion, Region, MapMarker } from 'react-native-maps';
 import { Image, StyleSheet, View } from 'react-native';
 import { BurritoLocation } from '../types';
 import { COLORS } from '../../../shared/theme/colors';
 import { StopCard } from './StopCard';
 import { FAB } from './FAB'; 
-import { useThemeStore } from '../../../store/themeStore'; 
 import { darkMapStyle } from '../constants/mapTheme'; 
 import { 
-  UNMSM_LOCATION, 
-  RUTA_OFICIAL, 
-  PARADEROS, 
-  SOUTH_WEST, 
-  NORTH_EAST 
+  UNMSM_LOCATION, RUTA_OFICIAL, PARADEROS, SOUTH_WEST, NORTH_EAST 
 } from '../constants/map_route';
-
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
-// ⚓ REFERENCIA ESTABLE: Esto evita que el mapa se recargue al volver a blanco
 const lightMapStyle: any[] = []; 
 
 interface Props {
   burritoLocation: BurritoLocation | null;
+  isDarkMode: boolean; // 👈 Ahora lo recibe como propiedad
 }
 
 const isOutsideBounds = (region: Region) => (
-  region.latitude < SOUTH_WEST.latitude ||
-  region.latitude > NORTH_EAST.latitude ||
-  region.longitude < SOUTH_WEST.longitude ||
-  region.longitude > NORTH_EAST.longitude
+  region.latitude < SOUTH_WEST.latitude || region.latitude > NORTH_EAST.latitude ||
+  region.longitude < SOUTH_WEST.longitude || region.longitude > NORTH_EAST.longitude
 );
 
-export const Map = ({ burritoLocation }: Props) => {
+// 👇 SEPARAMOS EL COMPONENTE PARA PODER MEMOIZARLO
+const MapComponent = ({ burritoLocation, isDarkMode }: Props) => {
   const mapRef = useRef<MapView>(null);
   const isAnimatingRef = useRef(false);
   const markerRefs = useRef<{ [key: string]: MapMarker | null }>({});
-  
   const [isFollowingBus, setIsFollowingBus] = useState(true);
-  const { isDarkMode } = useThemeStore();
 
   const burritoPosition = useRef(
     new AnimatedRegion({
-      latitude: UNMSM_LOCATION.latitude,
-      longitude: UNMSM_LOCATION.longitude,
-      latitudeDelta: 0,
-      longitudeDelta: 0,
+      latitude: UNMSM_LOCATION.latitude, longitude: UNMSM_LOCATION.longitude,
+      latitudeDelta: 0, longitudeDelta: 0,
     })
   ).current;
 
   useEffect(() => {
     if (burritoLocation) {
       burritoPosition.timing({
-        latitude: burritoLocation.latitude,
-        longitude: burritoLocation.longitude,
-        duration: 2500,
-        useNativeDriver: false,
+        latitude: burritoLocation.latitude, longitude: burritoLocation.longitude,
+        duration: 2500, useNativeDriver: false,
       } as any).start();
 
       if (isFollowingBus) {
         mapRef.current?.animateToRegion({
-          latitude: burritoLocation.latitude,
-          longitude: burritoLocation.longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
+          latitude: burritoLocation.latitude, longitude: burritoLocation.longitude,
+          latitudeDelta: 0.005, longitudeDelta: 0.005,
         }, 1000);
       }
     }
@@ -72,10 +57,8 @@ export const Map = ({ burritoLocation }: Props) => {
     setIsFollowingBus(true);
     if (burritoLocation) {
       mapRef.current?.animateToRegion({
-        latitude: burritoLocation.latitude,
-        longitude: burritoLocation.longitude,
-        latitudeDelta: 0.005,
-        longitudeDelta: 0.005,
+        latitude: burritoLocation.latitude, longitude: burritoLocation.longitude,
+        latitudeDelta: 0.005, longitudeDelta: 0.005,
       }, 1000);
     }
   };
@@ -106,68 +89,46 @@ export const Map = ({ burritoLocation }: Props) => {
         moveOnMarkerPress={false} 
         onRegionChangeComplete={handleRegionChangeComplete}
         onPanDrag={() => setIsFollowingBus(false)} 
-        // ⚡ MAPA FLUIDO: Usa nuestras dos referencias estables en memoria
         customMapStyle={isDarkMode ? darkMapStyle : lightMapStyle} 
       >
-        <Polyline
-          coordinates={RUTA_OFICIAL}
-          strokeColor={COLORS.primary}
-          strokeWidth={6}
-          lineCap="round"
-          lineJoin="round"
-          tappable={false} 
-          zIndex={-1}
-        />
-
+        <Polyline coordinates={RUTA_OFICIAL} strokeColor={COLORS.primary} strokeWidth={6} lineCap="round" lineJoin="round" tappable={false} zIndex={-1} />
         {PARADEROS.map((p) => (
           <Marker
             key={p.id} 
             ref={(ref) => { if (ref) markerRefs.current[p.id] = ref; }}
             coordinate={{ latitude: p.latitude, longitude: p.longitude }}
-            anchor={{ x: 0.5, y: 1 }}
-            calloutAnchor={{ x: 0.5, y: 0.15 }} 
-            tracksViewChanges={false} 
-            zIndex={10}
-            onPress={(e) => {
-              e.stopPropagation(); 
-              markerRefs.current[p.id]?.showCallout();
-            }}
+            anchor={{ x: 0.5, y: 1 }} calloutAnchor={{ x: 0.5, y: 0.15 }} tracksViewChanges={false} zIndex={10}
+            onPress={(e) => { e.stopPropagation(); markerRefs.current[p.id]?.showCallout(); }}
           >
             <View style={styles.iconContainer}>
               <Icon name="map-marker-radius" size={35} color={COLORS.primary} style={styles.iconShadow} />
             </View>
-
-            <Callout tooltip onPress={(e) => {
-                e.stopPropagation();
-                markerRefs.current[p.id]?.hideCallout();
-            }}>
+            <Callout tooltip onPress={(e) => { e.stopPropagation(); markerRefs.current[p.id]?.hideCallout(); }}>
               <StopCard title={p.name} />
             </Callout>
           </Marker>
         ))}
-
         {burritoLocation && (
-          <Marker.Animated
-            coordinate={burritoPosition as any}
-            rotation={burritoLocation.heading || 0}
-            flat anchor={{ x: 0.5, y: 0.5 }}
-            zIndex={50}
-          >
+          <Marker.Animated coordinate={burritoPosition as any} rotation={burritoLocation.heading || 0} flat anchor={{ x: 0.5, y: 0.5 }} zIndex={50}>
             <View style={styles.busContainer}>
               <Image source={require('../../../assets/bus.png')} style={styles.busImage} />
             </View>
           </Marker.Animated>
         )}
       </MapView>
-
-      <FAB 
-        isFollowingBus={isFollowingBus}
-        onFollowBus={handleFollowBus}
-        onCenterMap={handleCenterMap}
-      />
+      <FAB isFollowingBus={isFollowingBus} onFollowBus={handleFollowBus} onCenterMap={handleCenterMap} />
     </View>
   );
 };
+
+// 👇 EL ESCUDO MÁGICO: Solo se re-renderiza si cambian estas variables exactas
+export const Map = memo(MapComponent, (prevProps, nextProps) => {
+  return (
+    prevProps.isDarkMode === nextProps.isDarkMode &&
+    prevProps.burritoLocation?.latitude === nextProps.burritoLocation?.latitude &&
+    prevProps.burritoLocation?.longitude === nextProps.burritoLocation?.longitude
+  );
+});
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

@@ -1,6 +1,6 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
-import { View, Text, StyleSheet, Switch } from 'react-native';
+import { View, Text, StyleSheet, Switch, useColorScheme } from 'react-native'; // 👈 useColorScheme nativo
 import { MapScreen } from '../../features/map/screen/MapScreen';
 import { COLORS } from '../../shared/theme/colors';
 import { useThemeStore } from '../../store/themeStore';
@@ -11,7 +11,6 @@ const Drawer = createDrawerNavigator();
 const CustomDrawerContent = (props: any) => {
   const { isDarkMode, toggleTheme } = useThemeStore();
 
-  // 🦎 EL CAMALEÓN: Definimos los colores dinámicamente según el tema
   const bgColor = isDarkMode ? '#1E1E1E' : '#FFFFFF';
   const textColor = isDarkMode ? '#FFFFFF' : '#1A1A1A';
   const subTextColor = isDarkMode ? '#A0A0A0' : '#666666';
@@ -19,12 +18,7 @@ const CustomDrawerContent = (props: any) => {
   const iconColor = isDarkMode ? COLORS.primary : '#555555';
 
   return (
-    <DrawerContentScrollView 
-      {...props} 
-      contentContainerStyle={{ paddingTop: 0 }}
-      style={{ backgroundColor: bgColor }} // 👈 Fondo del Drawer cambia aquí
-    >
-      {/* 👤 PERFIL */}
+    <DrawerContentScrollView {...props} contentContainerStyle={{ paddingTop: 0 }} style={{ backgroundColor: bgColor }}>
       <View style={styles.drawerHeader}>
         <View style={styles.coverPhoto} />
         <View style={styles.userInfoSection}>
@@ -34,7 +28,6 @@ const CustomDrawerContent = (props: any) => {
         </View>
       </View>
 
-      {/* 🌙 PALANCA MODO OSCURO */}
       <View style={[styles.themeSection, { borderTopColor: dividerColor }]}>
         <View style={styles.themeRow}>
           <Icon name="weather-night" size={24} color={iconColor} />
@@ -52,14 +45,22 @@ const CustomDrawerContent = (props: any) => {
 };
 
 export const DrawerNavigator = () => {
+  const systemColorScheme = useColorScheme(); // 👈 Lee si tu celular (Android/iOS) es Dark o Light
+  const { setTheme } = useThemeStore();
+
+  // 👈 Sincroniza la app con tu celular al abrirla
+  useEffect(() => {
+    setTheme(systemColorScheme === 'dark');
+  }, [systemColorScheme]);
+
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
       screenOptions={{
         headerShown: false,
         drawerStyle: { width: 280 },
-        // 🛡️ LA BARRERA: 'front' hace que el menú flote por encima del mapa sin empujarlo
         drawerType: 'front', 
+        overlayColor: 'transparent', // 👈 ESTO ELIMINA EL "DOBLE OSCURO" FEA DE LAS IMÁGENES
       }}
     >
       <Drawer.Screen name="MapScreen" component={MapScreen} />
@@ -67,7 +68,6 @@ export const DrawerNavigator = () => {
   );
 };
 
-// Dejamos solo los estilos estructurales. Los colores los maneja el Camaleón arriba.
 const styles = StyleSheet.create({
   drawerHeader: { marginBottom: 20 },
   coverPhoto: { height: 140, backgroundColor: COLORS.primary, opacity: 0.8 },
@@ -75,15 +75,7 @@ const styles = StyleSheet.create({
   avatar: { width: 80, height: 80, borderRadius: 40, backgroundColor: '#E0E0E0', borderWidth: 3, elevation: 5 },
   userName: { fontSize: 18, fontWeight: 'bold', marginTop: 10 },
   userEmail: { fontSize: 14 },
-  themeSection: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 15,
-    borderTopWidth: 1,
-    marginTop: 10,
-  },
+  themeSection: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 15, borderTopWidth: 1, marginTop: 10 },
   themeRow: { flexDirection: 'row', alignItems: 'center' },
   themeText: { fontSize: 16, marginLeft: 15, fontWeight: '500' }
 });
