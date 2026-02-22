@@ -13,6 +13,7 @@ export const FAB = ({ isFollowingBus, onFollowBus, onCenterMap }: FABProps) => {
   return (
     <View style={styles.container}>
       
+      {/* Botón de Centrado Panorámico */}
       <TouchableOpacity 
         style={styles.button} 
         onPress={onCenterMap} 
@@ -21,6 +22,7 @@ export const FAB = ({ isFollowingBus, onFollowBus, onCenterMap }: FABProps) => {
         <Icon name="map-outline" size={24} color="#1A1A1A" />
       </TouchableOpacity>
 
+      {/* Botón de Seguimiento al Burrito */}
       <TouchableOpacity 
         style={[styles.button, isFollowingBus && styles.buttonActive]} 
         onPress={onFollowBus} 
@@ -59,6 +61,6 @@ const styles = StyleSheet.create({
     marginBottom: 15, 
   },
   buttonActive: {
-    backgroundColor: COLORS.primary, // Se pinta de azul cuando está siguiendo al bus
+    backgroundColor: COLORS.primary, 
   }
 });

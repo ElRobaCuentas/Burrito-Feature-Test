@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createDrawerNavigator, DrawerContentScrollView } from '@react-navigation/drawer';
-import { View, Text, StyleSheet, Switch, useColorScheme } from 'react-native'; // 👈 useColorScheme nativo
+import { View, Text, StyleSheet, Switch, useColorScheme } from 'react-native'; 
 import { MapScreen } from '../../features/map/screen/MapScreen';
 import { COLORS } from '../../shared/theme/colors';
 import { useThemeStore } from '../../store/themeStore';
@@ -8,6 +8,7 @@ import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 
 const Drawer = createDrawerNavigator();
 
+// 🛠️ REGRESAMOS EL DISEÑO DEL DRAWER AQUÍ MISMO PARA EVITAR EL ERROR DE IMPORT
 const CustomDrawerContent = (props: any) => {
   const { isDarkMode, toggleTheme } = useThemeStore();
 
@@ -45,10 +46,9 @@ const CustomDrawerContent = (props: any) => {
 };
 
 export const DrawerNavigator = () => {
-  const systemColorScheme = useColorScheme(); // 👈 Lee si tu celular (Android/iOS) es Dark o Light
+  const systemColorScheme = useColorScheme(); 
   const { setTheme } = useThemeStore();
 
-  // 👈 Sincroniza la app con tu celular al abrirla
   useEffect(() => {
     setTheme(systemColorScheme === 'dark');
   }, [systemColorScheme]);
@@ -56,14 +56,21 @@ export const DrawerNavigator = () => {
   return (
     <Drawer.Navigator
       drawerContent={(props) => <CustomDrawerContent {...props} />}
+      // 🚨 LA CURA 1: Prohíbe que React Navigation desmonte la pantalla del mapa
+      detachInactiveScreens={false} 
       screenOptions={{
         headerShown: false,
         drawerStyle: { width: 280 },
-        drawerType: 'front', 
-        overlayColor: 'transparent', // 👈 ESTO ELIMINA EL "DOBLE OSCURO" FEA DE LAS IMÁGENES
-      }}
+        drawerType: 'front', // Flota encima, no empuja
+        overlayColor: 'rgba(0,0,0,0.5)',
+      } as any} // 🛠️ Silenciamos TypeScript con "any" para evitar conflictos de versión
     >
-      <Drawer.Screen name="MapScreen" component={MapScreen} />
+      <Drawer.Screen 
+        name="MapScreen" 
+        component={MapScreen} 
+        // 🚨 LA CURA 2: Movida a Screen. Evita que la pantalla se congele al perder el foco.
+        options={{ unmountOnBlur: false } as any} 
+      />
     </Drawer.Navigator>
   );
 };

@@ -78,3 +78,15 @@ yarn-error.log
 # Secretos y Tokens
 .env
 android/gradle.properties
+
+
+# Entorno virtual
+venv/
+.venv/
+
+# Credenciales de Firebase (Seguridad)
+serviceAccountKey.json
+
+# Archivos temporales de Python
+__pycache__/
+*.py[cod]

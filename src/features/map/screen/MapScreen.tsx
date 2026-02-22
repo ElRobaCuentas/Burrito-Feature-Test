@@ -1,41 +1,55 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { StyleSheet, View, TouchableOpacity, SafeAreaView } from 'react-native';
-import { Map } from '../components/Map';
 import { useBurritoStore } from '../../../store/burritoLocationStore';
-import { useThemeStore } from '../../../store/themeStore'; // 👈 Importamos el tema aquí
+import { useThemeStore } from '../../../store/themeStore';
+import { useMapStore } from '../../../store/mapStore'; 
+import { useDrawerStore } from '../../../store/drawerStore'; // 👈 Nuestro nuevo store
+import { Map } from '../components/Map';
+import { FAB } from '../components/FAB';
+import { CustomDrawer } from '../components/CustomDrawer'; // 👈 Nuestro menú personalizado
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
-import { useNavigation, DrawerActions } from '@react-navigation/native';
 import { COLORS } from '../../../shared/theme/colors';
+import Mapbox from '@rnmapbox/maps';
 
 export const MapScreen = () => {
   const { location, actions } = useBurritoStore();
-  const { isDarkMode } = useThemeStore(); // 👈 Obtenemos el estado
-  const navigation = useNavigation();
+  const { isDarkMode } = useThemeStore();
+  const { isFollowing, setCommand } = useMapStore(); 
+  const { openDrawer } = useDrawerStore(); // 👈 Ya no usamos react-navigation para esto
 
   useEffect(() => {
     actions.startTracking();
-    return () => actions.stopTracking();
   }, []);
 
   return (
     <View style={styles.container}>
-      {/* 👇 Pasamos el tema como propiedad */}
-      <Map burritoLocation={location} isDarkMode={isDarkMode} /> 
+      {/* 🗺️ EL MAPA: Intocable, siempre vivo, recibe tus dedos al 100% */}
+      <Map burritoLocation={location} isDarkMode={isDarkMode} />
 
-      <SafeAreaView style={styles.hamburgerContainer}>
-        <TouchableOpacity 
-          activeOpacity={0.6}
-          onPress={() => navigation.dispatch(DrawerActions.openDrawer())}
-        >
-          <Icon name="menu" size={36} color={COLORS.primary} style={styles.iconShadow} />
-        </TouchableOpacity>
-      </SafeAreaView>
+      {/* 🛠️ CAPA UI: pointerEvents="box-none" permite tocar el mapa */}
+      <View style={styles.uiLayer} pointerEvents="box-none">
+        <SafeAreaView style={styles.hamburgerContainer}>
+          <TouchableOpacity onPress={openDrawer}>
+            <Icon name="menu" size={36} color={COLORS.primary} style={styles.iconShadow} />
+          </TouchableOpacity>
+        </SafeAreaView>
+
+        <FAB 
+          isFollowingBus={isFollowing} 
+          onFollowBus={() => setCommand('follow')}
+          onCenterMap={() => setCommand('center')}
+        />
+      </View>
+
+      {/* 📦 NUESTRO DRAWER FLOTANTE: Vive encima de todo, sin destruir el mapa */}
+      <CustomDrawer />
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { ...StyleSheet.absoluteFillObject },
-  hamburgerContainer: { position: 'absolute', top: 40, left: 20, zIndex: 100 },
+  container: { flex: 1 },
+  uiLayer: { ...StyleSheet.absoluteFillObject },
+  hamburgerContainer: { position: 'absolute', top: 40, left: 20 },
   iconShadow: { textShadowColor: 'rgba(255, 255, 255, 0.9)', textShadowOffset: { width: 0, height: 1 }, textShadowRadius: 4 }
 });
