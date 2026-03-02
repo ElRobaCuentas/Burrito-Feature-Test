@@ -7,7 +7,6 @@ import { StopCard } from './StopCard';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import { useMapStore } from '../../../store/mapStore'; 
 import Reanimated, { FadeInDown, FadeOutDown, Easing, useSharedValue, useAnimatedStyle, withRepeat, withTiming, cancelAnimation } from 'react-native-reanimated';
-// 🔥 IMPORTAMOS LA LIBRERÍA DE HÁPTICA
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 
 const hapticOptions = {
@@ -295,20 +294,19 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
           </Mapbox.MarkerView>
         )}
 
+        {/* 🔥 EL FIX ESTÁ AQUÍ: Reemplazamos MarkerView por PointAnnotation */}
         {PARADEROS.map(p => (
-          <Mapbox.MarkerView 
-            key={p.id} 
-            id={p.id} 
+          <Mapbox.PointAnnotation 
+            key={`paradero-${p.id}`} 
+            id={`paradero-${p.id}`} 
             coordinate={[p.longitude, p.latitude]} 
+            onSelected={() => {
+              // Tu lógica exacta original, movida a la propiedad correcta
+              ReactNativeHapticFeedback.trigger("impactLight", hapticOptions);
+              setSelectedStopId(prev => prev === p.id ? null : p.id);
+            }}
           >
-            <TouchableOpacity 
-              activeOpacity={0.6}
-              onPress={() => {
-                // 🔥 LÓGICA DE VIBRACIÓN SECA AL TOCAR EL PARADERO
-                ReactNativeHapticFeedback.trigger("impactLight", hapticOptions);
-                setSelectedStopId(prev => prev === p.id ? null : p.id);
-              }}
-              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }} 
+            <View 
               style={[
                 styles.markerContainer,
                 { 
@@ -318,8 +316,8 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
               ]}
             >
               <Icon name="bus-stop" size={14} color={currentStopTheme.icon} />
-            </TouchableOpacity>
-          </Mapbox.MarkerView>
+            </View>
+          </Mapbox.PointAnnotation>
         ))}
 
         {busShape && (
@@ -331,8 +329,8 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
                 iconSize: 0.08, 
                 iconRotate: currentHeading, 
                 iconRotationAlignment: 'map', 
-                iconAllowOverlap: true,
-                iconIgnorePlacement: true 
+                iconAllowOverlap: true,      // Evita que el bus desaparezca
+                iconIgnorePlacement: true    // Evita conflictos con el mapa base
               }} 
             />
           </Mapbox.ShapeSource>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   View, Text, StyleSheet, TouchableOpacity, Image, 
   Switch, Dimensions, TouchableWithoutFeedback, TextInput, 
@@ -15,9 +15,10 @@ import Animated, {
   FadeIn, FadeOut, Layout 
 } from 'react-native-reanimated';
 import { TYPOGRAPHY } from '../../../shared/theme/typography';
-
-// 🔥 IMPORTANTE: Importamos el servicio que actualizamos
 import { MapService } from '../services/map_service';
+
+// 🔥 IMPORTAMOS DEVICE INFO PARA LEER LA VERSIÓN REAL
+import DeviceInfo from 'react-native-device-info';
 
 const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.72;
@@ -43,16 +44,28 @@ export const CustomDrawer = () => {
 
   const [isExpanding, setIsExpanding] = useState(false);
   
-  // ✨ ESTADOS PARA FEEDBACK
   const [modalVisible, setModalVisible] = useState(false);
   const [rating, setRating] = useState(0);
   const [feedback, setFeedback] = useState("");
   const [isSending, setIsSending] = useState(false);
 
+  // ✨ ESTADO PARA LA VERSIÓN DE LA APP
+  const [appVersion, setAppVersion] = useState('');
+
   const translateX = useSharedValue(-DRAWER_WIDTH - 50); 
   const backdropOpacity = useSharedValue(0);
 
-  React.useEffect(() => {
+  // 🔥 EFECTO PARA OBTENER LA VERSIÓN AL CARGAR EL DRAWER
+  useEffect(() => {
+    const fetchVersion = async () => {
+      // getVersion() devuelve el "versionName" (ej. 1.0.0) de build.gradle
+      const version = DeviceInfo.getVersion();
+      setAppVersion(`v.${version}`);
+    };
+    fetchVersion();
+  }, []);
+
+  useEffect(() => {
     if (isOpen) {
       translateX.value = withSpring(0, { damping: 20, stiffness: 150, overshootClamping: true });
       backdropOpacity.value = withTiming(1, { duration: 300 });
@@ -82,7 +95,6 @@ export const CustomDrawer = () => {
 
   const availableAvatars = AVATAR_LIST.filter(item => item.id !== avatar);
 
-  // 🔥 FUNCIÓN DE ENVÍO A FIREBASE
   const handleSendFeedback = async () => {
     if (rating === 0) {
       Alert.alert("Atención", "Por favor, selecciona una calificación con estrellas.");
@@ -134,7 +146,6 @@ export const CustomDrawer = () => {
           <Text style={[styles.userName, { color: theme.text }]}>{username || 'Sanmarquino'}</Text>
           <View style={[styles.facultyBadge, { backgroundColor: COLORS.primary + '20' }]}>
             <Icon name="school-outline" size={14} color={COLORS.primary} />
-            {/* 🔥 AQUÍ SUCEDE LA MAGIA: Mostramos el apodo chistoso */}
             <Text style={[styles.facultyText, { color: COLORS.primary }]}>
               {nickname ? nickname.toUpperCase() : (avatar ? avatar.toUpperCase() : 'ESTUDIANTE')}
             </Text>
@@ -205,12 +216,13 @@ export const CustomDrawer = () => {
           </TouchableOpacity>
         </View>
 
+        {/* 🔥 AQUÍ PINTAMOS LA VERSIÓN DINÁMICA */}
         <View style={styles.footer}>
-          <Text style={[styles.versionText, { color: theme.subText }]}>v.1.0</Text>
+          <Text style={[styles.versionText, { color: theme.subText }]}>{appVersion || 'Cargando...'}</Text>
         </View>
       </Animated.View>
 
-      {/* ✨ BOTTOM SHEET MODAL */}
+      {/* MODAL (Sin Cambios) */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{flex: 1}}>
           <View style={styles.modalOverlay}>
@@ -258,12 +270,12 @@ export const CustomDrawer = () => {
           </View>
         </KeyboardAvoidingView>
       </Modal>
-
     </View>
   );
 };
 
 const styles = StyleSheet.create({
+  // ... (Tus estilos originales se mantienen exactamente igual)
   overlay: { ...StyleSheet.absoluteFillObject, zIndex: 9999 },
   backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
   drawerContainer: { 

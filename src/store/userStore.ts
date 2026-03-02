@@ -12,12 +12,13 @@ const SANMARCOS_NICKNAMES: Record<AvatarId, string[]> = {
   economista: ['Inflacionado', 'PBI en Crecimiento', 'Riesgo País', 'Macro Mind'],
 };
 
-interface UserState {
+// 🔥 EXPORTAMOS LA INTERFAZ PARA USARLA EN EL STACK
+export interface UserState {
   uuid: string | null;
   username: string | null;
   avatar: AvatarId | null;
   nickname: string | null; 
-  isLoggedIn: boolean; // 🔥 RESTAURAMOS LA BANDERA DE AUTENTICACIÓN
+  isLoggedIn: boolean; 
   _hasHydrated: boolean;
   login: (uuid: string, username: string, avatar: AvatarId) => void;
   logout: () => void;
@@ -40,12 +41,13 @@ export const useUserStore = create<UserState>()(
         const nicknames = SANMARCOS_NICKNAMES[avatar];
         const randomNick = nicknames[Math.floor(Math.random() * nicknames.length)];
         
-        // 🔥 isLoggedIn: true es lo que evita que te vuelva a pedir los datos
         set({ uuid, username, avatar, nickname: randomNick, isLoggedIn: true });
       },
 
       // Borramos todo al salir
-      logout: () => set({ uuid: null, username: null, avatar: null, nickname: null, isLoggedIn: false }),
+      logout: () => {
+        set({ uuid: null, username: null, avatar: null, nickname: null, isLoggedIn: false });
+      },
 
       // Si cambia de avatar en la app, lo volvemos a bautizar
       setAvatar: (avatar) => {
@@ -60,16 +62,23 @@ export const useUserStore = create<UserState>()(
     {
       name: 'burrito-user-storage',
       storage: createJSONStorage(() => AsyncStorage),
-      // 🔥 Guardamos TODO en la memoria, incluyendo que ya está logueado
+      // 🔥 GUARDAMOS TODO (La llave de la puerta incluida)
       partialize: (state) => ({ 
         uuid: state.uuid, 
         username: state.username, 
         avatar: state.avatar,
         nickname: state.nickname,
-        isLoggedIn: state.isLoggedIn // ¡ESTO FALTABA!
+        isLoggedIn: state.isLoggedIn 
       }),
-      onRehydrateStorage: () => (state) => {
-        if (state) state.setHasHydrated(true);
+      // 🔥 MANEJO DE ERRORES: Para evitar el "Splash Infinito"
+      onRehydrateStorage: () => (state, error) => {
+        if (error) {
+          console.error("Error al leer el disco duro:", error);
+        }
+        // Pase lo que pase, le decimos a App.tsx que ya terminamos de cargar
+        if (state) {
+          state.setHasHydrated(true);
+        }
       },
     }
   )

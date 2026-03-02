@@ -13,9 +13,6 @@ interface Props {
   onClose: () => void;
 }
 
-// ==========================================
-// 🦴 COMPONENTE SKELETON INTERNO
-// ==========================================
 const Skeleton = ({ isDarkMode }: { isDarkMode: boolean }) => {
   const shimmerValue = useSharedValue(-1);
 

@@ -60,7 +60,6 @@ export const RUTA_GEOJSON: any = {
   }
 };
 
-// 2. PARADEROS (Tus 10 originales tal cual los querías)
 export const PARADEROS = [
   { id: '1', latitude: -12.054874, longitude: -77.085864, name: 'Odontología' }, 
   { id: '2', latitude: -12.056032, longitude: -77.084961, name: 'Plaza Cívica' }, 
