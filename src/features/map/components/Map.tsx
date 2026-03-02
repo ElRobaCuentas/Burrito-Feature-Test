@@ -6,7 +6,7 @@ import { PARADEROS, RUTA_GEOJSON } from '../constants/map_route';
 import { StopCard } from './StopCard'; 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import { useMapStore } from '../../../store/mapStore'; 
-import Reanimated, { FadeInDown, FadeOutDown, Easing, useSharedValue, useAnimatedStyle, withRepeat, withTiming, cancelAnimation } from 'react-native-reanimated';
+import Reanimated, { FadeInDown, FadeOutDown, Easing, cancelAnimation } from 'react-native-reanimated';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 
 const hapticOptions = {
@@ -54,63 +54,6 @@ const snapToRoute = (lat: number, lng: number) => {
 
 type RadarStatus = 'active' | 'stationary' | 'offline';
 
-const RadarPulse = ({ status }: { status: RadarStatus }) => {
-  const radarScale = useSharedValue(1);
-  const radarOpacity = useSharedValue(1);
-
-  useEffect(() => {
-    cancelAnimation(radarScale);
-    cancelAnimation(radarOpacity);
-
-    radarScale.value = 1;
-    radarOpacity.value = 0.85;
-
-    let duration = 1200; 
-    if (status === 'stationary') duration = 2500; 
-    if (status === 'offline') duration = 4000; 
-
-    radarScale.value = withRepeat(
-      withTiming(4.0, { duration, easing: Easing.out(Easing.ease) }),
-      -1, false
-    );
-    radarOpacity.value = withRepeat(
-      withTiming(0, { duration, easing: Easing.out(Easing.ease) }),
-      -1, false
-    );
-
-    return () => {
-      cancelAnimation(radarScale);
-      cancelAnimation(radarOpacity);
-    };
-  }, [status]);
-
-  const radarAnimatedStyle = useAnimatedStyle(() => {
-    let borderColor = COLORS.primary;
-    let backgroundColor = 'rgba(0, 174, 239, 0.35)'; 
-
-    if (status === 'stationary') {
-      borderColor = '#FF9800';
-      backgroundColor = 'rgba(255, 152, 0, 0.35)'; 
-    } else if (status === 'offline') {
-      borderColor = '#F44336'; 
-      backgroundColor = 'rgba(244, 67, 54, 0.35)'; 
-    }
-
-    return {
-      transform: [{ scale: radarScale.value }],
-      opacity: radarOpacity.value,
-      borderColor,
-      backgroundColor,
-    };
-  }, [status]);
-
-  return (
-    <View style={styles.radarContainer} pointerEvents="none">
-      <Reanimated.View style={[styles.radarRing, radarAnimatedStyle]} />
-    </View>
-  );
-};
-
 export const Map = ({ burritoLocation, isDarkMode }: any) => {
   const cameraRef = useRef<Mapbox.Camera>(null);
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
@@ -119,8 +62,6 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
   const [isMapReady, setIsMapReady] = useState(false);
   const [boundsActive, setBoundsActive] = useState(false);
   const [isFirstBusLoad, setIsFirstBusLoad] = useState(true);
-
-  const [safeToRenderRadar, setSafeToRenderRadar] = useState(true);
 
   const [radarStatus, setRadarStatus] = useState<RadarStatus>('active');
   const stationaryTimer = useRef<NodeJS.Timeout | null>(null);
@@ -132,18 +73,16 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
   const [currentPos, setCurrentPos] = useState<number[] | null>(null);
   const [currentHeading, setCurrentHeading] = useState<number>(0);
 
-  useEffect(() => {
-    setSafeToRenderRadar(false);
-    const timer = setTimeout(() => {
-      setSafeToRenderRadar(true);
-    }, 750); 
-    return () => clearTimeout(timer);
-  }, [isDarkMode]);
+  // --- VARIABLES DE ANIMACIÓN DEL RADAR NATIVO ---
+  const [radarRadius, setRadarRadius] = useState(0);
+  const [radarOpacity, setRadarOpacity] = useState(0.85);
+  const radarAnimValue = useRef(new RNAnimated.Value(0)).current;
 
   useEffect(() => {
     return () => {
       if (stationaryTimer.current) clearTimeout(stationaryTimer.current);
       if (offlineTimer.current) clearTimeout(offlineTimer.current);
+      radarAnimValue.stopAnimation();
     };
   }, []);
 
@@ -154,6 +93,37 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
     }
     return () => { if (timer) clearTimeout(timer); };
   }, [selectedStopId]);
+
+  // --- LÓGICA DE ANIMACIÓN DEL RADAR ---
+  useEffect(() => {
+    radarAnimValue.stopAnimation();
+    radarAnimValue.setValue(0);
+
+    let duration = 1200; 
+    if (radarStatus === 'stationary') duration = 2500; 
+    if (radarStatus === 'offline') duration = 4000; 
+
+    const loop = RNAnimated.loop(
+      RNAnimated.timing(radarAnimValue, {
+        toValue: 1,
+        duration: duration,
+        easing: RNEasing.out(RNEasing.ease),
+        useNativeDriver: false, // Mapbox requiere valores JS para actualizar props
+      })
+    );
+
+    loop.start();
+
+    const listenerId = radarAnimValue.addListener(({ value }) => {
+      setRadarRadius(value * 60); // 60 es el radio máximo equivalente a width 120
+      setRadarOpacity(0.85 * (1 - value));
+    });
+
+    return () => {
+      loop.stop();
+      radarAnimValue.removeListener(listenerId);
+    };
+  }, [radarStatus]);
 
   useEffect(() => {
     if (burritoLocation) {
@@ -254,6 +224,17 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
   const selectedStop = useMemo(() => PARADEROS.find(p => p.id === selectedStopId), [selectedStopId]);
   const currentStopTheme = isDarkMode ? STOP_COLORS.dark : STOP_COLORS.light;
 
+  // Determinar colores del radar nativo
+  let radarBorderColor = COLORS.primary;
+  let radarBgColor = 'rgba(0, 174, 239, 0.35)';
+  if (radarStatus === 'stationary') {
+    radarBorderColor = '#FF9800';
+    radarBgColor = 'rgba(255, 152, 0, 0.35)';
+  } else if (radarStatus === 'offline') {
+    radarBorderColor = '#F44336';
+    radarBgColor = 'rgba(244, 67, 54, 0.35)';
+  }
+
   return (
     <View style={styles.container}>
       <Mapbox.MapView
@@ -284,29 +265,40 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
           />
         </Mapbox.ShapeSource>
 
-        {safeToRenderRadar && currentPos && (
-          <Mapbox.MarkerView 
-            id={`radar-${isDarkMode}`} 
-            coordinate={currentPos} 
-            anchor={{ x: 0.5, y: 0.5 }}
-          >
-            <RadarPulse status={radarStatus} />
-          </Mapbox.MarkerView>
+        {/* 🔥 SOLUCIÓN: El Radar ahora es un ShapeSource/CircleLayer nativo. 
+             No tiene vista flotante que bloquee los toques. */}
+        {currentPos && (
+          <Mapbox.ShapeSource id="radarSource" shape={busShape as any}>
+            <Mapbox.CircleLayer
+              id="radarRingInner"
+              style={{
+                circleRadius: radarRadius,
+                circleOpacity: radarOpacity,
+                circleColor: radarBgColor,
+                circleStrokeWidth: 4,
+                circleStrokeColor: radarBorderColor,
+                circleStrokeOpacity: radarOpacity,
+              }}
+            />
+          </Mapbox.ShapeSource>
         )}
 
-        {/* 🔥 EL FIX ESTÁ AQUÍ: Reemplazamos MarkerView por PointAnnotation */}
+        {/* TUS PARADEROS INTACTOS */}
         {PARADEROS.map(p => (
-          <Mapbox.PointAnnotation 
-            key={`paradero-${p.id}`} 
-            id={`paradero-${p.id}`} 
+          <Mapbox.MarkerView 
+            key={p.id} 
+            id={p.id} 
             coordinate={[p.longitude, p.latitude]} 
-            onSelected={() => {
-              // Tu lógica exacta original, movida a la propiedad correcta
-              ReactNativeHapticFeedback.trigger("impactLight", hapticOptions);
-              setSelectedStopId(prev => prev === p.id ? null : p.id);
-            }}
+            allowOverlap={true}
           >
-            <View 
+            <TouchableOpacity 
+              activeOpacity={0.6}
+              onPress={() => {
+                // TU LÓGICA INTACTA
+                ReactNativeHapticFeedback.trigger("impactLight", hapticOptions);
+                setSelectedStopId(prev => prev === p.id ? null : p.id);
+              }}
+              hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }} 
               style={[
                 styles.markerContainer,
                 { 
@@ -316,8 +308,8 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
               ]}
             >
               <Icon name="bus-stop" size={14} color={currentStopTheme.icon} />
-            </View>
-          </Mapbox.PointAnnotation>
+            </TouchableOpacity>
+          </Mapbox.MarkerView>
         ))}
 
         {busShape && (
@@ -329,8 +321,8 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
                 iconSize: 0.08, 
                 iconRotate: currentHeading, 
                 iconRotationAlignment: 'map', 
-                iconAllowOverlap: true,      // Evita que el bus desaparezca
-                iconIgnorePlacement: true    // Evita conflictos con el mapa base
+                iconAllowOverlap: true, 
+                iconIgnorePlacement: true 
               }} 
             />
           </Mapbox.ShapeSource>
@@ -368,18 +360,5 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.25,
     shadowRadius: 3,
   }, 
-  radarContainer: {
-    width: 120, 
-    height: 120,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  radarRing: {
-    width: 32, 
-    height: 32,
-    borderRadius: 16,
-    borderWidth: 4, 
-    position: 'absolute',
-  },
   cardWrapper: { position: 'absolute', bottom: 40, alignSelf: 'center', zIndex: 100, elevation: 10 }
 });
