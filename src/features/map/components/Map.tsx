@@ -94,7 +94,6 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
     return () => { if (timer) clearTimeout(timer); };
   }, [selectedStopId]);
 
-  // --- LÓGICA DE ANIMACIÓN DEL RADAR ---
   useEffect(() => {
     radarAnimValue.stopAnimation();
     radarAnimValue.setValue(0);
@@ -108,7 +107,7 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
         toValue: 1,
         duration: duration,
         easing: RNEasing.out(RNEasing.ease),
-        useNativeDriver: false, // Mapbox requiere valores JS para actualizar props
+        useNativeDriver: false, 
       })
     );
 
@@ -129,15 +128,16 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
     if (burritoLocation) {
       const snappedCoords = snapToRoute(burritoLocation.latitude, burritoLocation.longitude);
       
-      setRadarStatus('active'); 
-      
-      if (stationaryTimer.current) clearTimeout(stationaryTimer.current);
-      if (offlineTimer.current) clearTimeout(offlineTimer.current);
-
-      stationaryTimer.current = setTimeout(() => {
+      // 🔥 LA MEJORA TRASPLANTADA: Detección inteligente de velocidad para el Radar
+      // Si la velocidad es menor a 5 m/s (18 km/h), consideramos que está yendo lento/parado.
+      if (burritoLocation.speed !== undefined && burritoLocation.speed < 5) {
         setRadarStatus('stationary'); 
-      }, 15000); 
-
+      } else {
+        setRadarStatus('active'); 
+      }
+      
+      // Mantenemos el timer de offline por si pierde señal
+      if (offlineTimer.current) clearTimeout(offlineTimer.current);
       offlineTimer.current = setTimeout(() => {
         setRadarStatus('offline'); 
       }, 60000); 
@@ -149,6 +149,7 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
         setCurrentHeading((burritoLocation.heading || 0) - 90);
         setIsFirstBusLoad(false); 
       } else {
+        // Mantenemos tus 3000ms que funcionaban perfecto para San Marcos
         RNAnimated.parallel([
           RNAnimated.timing(latAnim, { toValue: snappedCoords[1], duration: 3000, easing: RNEasing.linear, useNativeDriver: false }),
           RNAnimated.timing(lngAnim, { toValue: snappedCoords[0], duration: 3000, easing: RNEasing.linear, useNativeDriver: false }),
