@@ -6,6 +6,8 @@ import { PARADEROS, RUTA_GEOJSON } from '../constants/map_route';
 import { StopCard } from './StopCard'; 
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; 
 import { useMapStore } from '../../../store/mapStore'; 
+// ✅ CAMBIO 1: Importamos el store del bus para leer el estado de la señal
+import { useBurritoStore } from '../../../store/burritoLocationStore'; 
 import Reanimated, { FadeInDown, FadeOutDown, Easing, cancelAnimation } from 'react-native-reanimated';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
 
@@ -59,13 +61,17 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
   const [selectedStopId, setSelectedStopId] = useState<string | null>(null);
   const { isFollowing, setIsFollowing, command, setCommand } = useMapStore();
   
+  // ✅ CAMBIO 2: Leemos la "única fuente de la verdad" del store
+  const busSignalStatus = useBurritoStore((state) => state.busSignalStatus);
+  
   const [isMapReady, setIsMapReady] = useState(false);
   const [boundsActive, setBoundsActive] = useState(false);
   const [isFirstBusLoad, setIsFirstBusLoad] = useState(true);
 
   const [radarStatus, setRadarStatus] = useState<RadarStatus>('active');
-  const stationaryTimer = useRef<NodeJS.Timeout | null>(null);
-  const offlineTimer = useRef<NodeJS.Timeout | null>(null);
+
+  // ✅ CAMBIO 3: ELIMINAMOS los useRef huérfanos y timers manuales de "offlineTimer" o "stationaryTimer".
+  // Ya no hacen falta. Todo viene derivado del `busSignalStatus`.
 
   const latAnim = useRef(new RNAnimated.Value(UNMSM_STATIC_VIEW.center[1])).current;
   const lngAnim = useRef(new RNAnimated.Value(UNMSM_STATIC_VIEW.center[0])).current;
@@ -73,15 +79,13 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
   const [currentPos, setCurrentPos] = useState<number[] | null>(null);
   const [currentHeading, setCurrentHeading] = useState<number>(0);
 
-  // --- VARIABLES DE ANIMACIÓN DEL RADAR NATIVO ---
   const [radarRadius, setRadarRadius] = useState(0);
   const [radarOpacity, setRadarOpacity] = useState(0.85);
   const radarAnimValue = useRef(new RNAnimated.Value(0)).current;
 
   useEffect(() => {
     return () => {
-      if (stationaryTimer.current) clearTimeout(stationaryTimer.current);
-      if (offlineTimer.current) clearTimeout(offlineTimer.current);
+      // ✅ CAMBIO 4: Limpiamos únicamente la animación, ya no hay timeouts que limpiar
       radarAnimValue.stopAnimation();
     };
   }, []);
@@ -114,7 +118,7 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
     loop.start();
 
     const listenerId = radarAnimValue.addListener(({ value }) => {
-      setRadarRadius(value * 60); // 60 es el radio máximo equivalente a width 120
+      setRadarRadius(value * 60);
       setRadarOpacity(0.85 * (1 - value));
     });
 
@@ -124,24 +128,32 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
     };
   }, [radarStatus]);
 
+  // ✅ CAMBIO 5: Lógica separada y limpia para el Color/Estado del Radar
+  useEffect(() => {
+    if (!burritoLocation) return;
+
+    // Si el chofer apagó el bus manualmente o se superaron los 10 segundos sin señal -> Radar ROJO
+    if (burritoLocation.isActive === false || busSignalStatus === 'lost') {
+      setRadarStatus('offline');
+    } 
+    // Si la señal es estable/débil pero el bus va a < 7km/h -> Radar NARANJA
+    else if (burritoLocation.speed !== undefined && burritoLocation.speed < 2) {
+      setRadarStatus('stationary');
+    } 
+    // Todo bien y moviéndose -> Radar AZUL
+    else {
+      setRadarStatus('active');
+    }
+  }, [burritoLocation, busSignalStatus]);
+
+  // ✅ CAMBIO 6: Lógica para el Movimiento (Interpolación a la polilínea)
   useEffect(() => {
     if (burritoLocation) {
+      // Si el chofer detuvo el bus, simplemente no hacemos nada (se queda en la posición actual hasta que desaparezca)
+      if (burritoLocation.isActive === false) return; 
+
       const snappedCoords = snapToRoute(burritoLocation.latitude, burritoLocation.longitude);
       
-      // 🔥 LA MEJORA TRASPLANTADA: Detección inteligente de velocidad para el Radar
-      // Si la velocidad es menor a 5 m/s (18 km/h), consideramos que está yendo lento/parado.
-      if (burritoLocation.speed !== undefined && burritoLocation.speed < 5) {
-        setRadarStatus('stationary'); 
-      } else {
-        setRadarStatus('active'); 
-      }
-      
-      // Mantenemos el timer de offline por si pierde señal
-      if (offlineTimer.current) clearTimeout(offlineTimer.current);
-      offlineTimer.current = setTimeout(() => {
-        setRadarStatus('offline'); 
-      }, 60000); 
-
       if (isFirstBusLoad) {
         latAnim.setValue(snappedCoords[1]);
         lngAnim.setValue(snappedCoords[0]);
@@ -149,7 +161,6 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
         setCurrentHeading((burritoLocation.heading || 0) - 90);
         setIsFirstBusLoad(false); 
       } else {
-        // Mantenemos tus 3000ms que funcionaban perfecto para San Marcos
         RNAnimated.parallel([
           RNAnimated.timing(latAnim, { toValue: snappedCoords[1], duration: 3000, easing: RNEasing.linear, useNativeDriver: false }),
           RNAnimated.timing(lngAnim, { toValue: snappedCoords[0], duration: 3000, easing: RNEasing.linear, useNativeDriver: false }),
@@ -225,7 +236,6 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
   const selectedStop = useMemo(() => PARADEROS.find(p => p.id === selectedStopId), [selectedStopId]);
   const currentStopTheme = isDarkMode ? STOP_COLORS.dark : STOP_COLORS.light;
 
-  // Determinar colores del radar nativo
   let radarBorderColor = COLORS.primary;
   let radarBgColor = 'rgba(0, 174, 239, 0.35)';
   if (radarStatus === 'stationary') {
@@ -235,6 +245,11 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
     radarBorderColor = '#F44336';
     radarBgColor = 'rgba(244, 67, 54, 0.35)';
   }
+
+  // ✅ CAMBIO 7: RESOLVEMOS EL BUS FANTASMA (Ocultar el ícono bajo condiciones estrictas)
+  // ¿Cuándo ocultamos el bus de la pantalla del alumno?
+  // -> SOLO cuando pasaron >10s sin señal ('lost') Y el conductor apagó la app (isActive: false).
+  const showBusOnMap = burritoLocation && !(busSignalStatus === 'lost' && burritoLocation.isActive === false);
 
   return (
     <View style={styles.container}>
@@ -266,9 +281,8 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
           />
         </Mapbox.ShapeSource>
 
-        {/* 🔥 SOLUCIÓN: El Radar ahora es un ShapeSource/CircleLayer nativo. 
-             No tiene vista flotante que bloquee los toques. */}
-        {currentPos && (
+        {/* ✅ CAMBIO 8: Condicionamos el pintado del Radar y del Icono con `showBusOnMap` */}
+        {showBusOnMap && currentPos && (
           <Mapbox.ShapeSource id="radarSource" shape={busShape as any}>
             <Mapbox.CircleLayer
               id="radarRingInner"
@@ -284,7 +298,6 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
           </Mapbox.ShapeSource>
         )}
 
-        {/* TUS PARADEROS INTACTOS */}
         {PARADEROS.map(p => (
           <Mapbox.MarkerView 
             key={p.id} 
@@ -295,7 +308,6 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
             <TouchableOpacity 
               activeOpacity={0.6}
               onPress={() => {
-                // TU LÓGICA INTACTA
                 ReactNativeHapticFeedback.trigger("impactLight", hapticOptions);
                 setSelectedStopId(prev => prev === p.id ? null : p.id);
               }}
@@ -313,7 +325,8 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
           </Mapbox.MarkerView>
         ))}
 
-        {busShape && (
+        {/* ✅ CAMBIO 8 (Cont.): Aplicamos la condición aquí también para ocultar la imagen del bus */}
+        {showBusOnMap && busShape && (
           <Mapbox.ShapeSource id="busSource" shape={busShape as any}>
             <Mapbox.SymbolLayer 
               id="busLayer" 
