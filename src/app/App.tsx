@@ -5,10 +5,19 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import database from '@react-native-firebase/database';
 
+//inicialización de Google Sign-In
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
+
 import { StackNavigator } from './navigations/StackNavigator';
 import { useUserStore } from '../store/userStore'; 
 import { useThemeStore } from '../store/themeStore'; 
 import { AnimatedSplash } from './screen/AnimatedSplash';
+
+// Configuración global de Google Sign-In con tu Web Client ID (tipo 3)
+GoogleSignin.configure({
+  webClientId: '677410027288-l5heitld12behdgnqf69rgkav0c6kbvc.apps.googleusercontent.com',
+  offlineAccess: true,
+});
 
 const App = () => {
   const [showAnimatedSplash, setShowAnimatedSplash] = useState(true);

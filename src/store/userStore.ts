@@ -4,7 +4,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export type AvatarId = 'ingeniero' | 'salud' | 'economista' | 'humanidades';
 
-// 🔥 EL DICCIONARIO SANMARQUINO DEFINITIVO
+
 const SANMARCOS_NICKNAMES: Record<AvatarId, string[]> = {
   humanidades: ['Poeta Descalzo', 'Revolucionario', 'Eterno Lector', 'Filósofo Andante'],
   salud: ['Diagnóstico Dudoso', 'Guardia Eterno', 'Anestesia Social', 'Pulso Firme'],
@@ -17,9 +17,10 @@ export interface UserState {
   username: string | null;
   avatar: AvatarId | null;
   nickname: string | null; 
+  email: string | null; 
   isLoggedIn: boolean; 
   _hasHydrated: boolean;
-  login: (uuid: string, username: string, avatar: AvatarId) => void;
+  login: (uuid: string, username: string, avatar: AvatarId, email?: string) => void; // 🔥 MODIFICADO: Acepta email opcional
   logout: () => void;
   setAvatar: (avatar: AvatarId) => void;
   setHasHydrated: (state: boolean) => void;
@@ -32,18 +33,19 @@ export const useUserStore = create<UserState>()(
       username: null,
       avatar: null,
       nickname: null, 
-      isLoggedIn: false, // Inicia desconectado
+      email: null, 
+      isLoggedIn: false, 
       _hasHydrated: false,
 
-      login: (uuid, username, avatar) => {
+      login: (uuid, username, avatar, email) => {
         const nicknames = SANMARCOS_NICKNAMES[avatar];
         const randomNick = nicknames[Math.floor(Math.random() * nicknames.length)];
         
-        set({ uuid, username, avatar, nickname: randomNick, isLoggedIn: true });
+        set({ uuid, username, avatar, email: email ?? null, nickname: randomNick, isLoggedIn: true });
       },
 
       logout: () => {
-        set({ uuid: null, username: null, avatar: null, nickname: null, isLoggedIn: false });
+        set({ uuid: null, username: null, avatar: null, nickname: null, email: null, isLoggedIn: false });
       },
 
       setAvatar: (avatar) => {
@@ -63,6 +65,7 @@ export const useUserStore = create<UserState>()(
         username: state.username, 
         avatar: state.avatar,
         nickname: state.nickname,
+        email: state.email,
         isLoggedIn: state.isLoggedIn 
       }),
       onRehydrateStorage: () => (state, error) => {

@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, TouchableOpacity, Image, 
   Switch, Dimensions, TouchableWithoutFeedback, TextInput, 
   Modal, KeyboardAvoidingView, Platform, Alert, ActivityIndicator,
-  BackHandler // 🔥 1. IMPORTAMOS BACKHANDLER
+  BackHandler
 } from 'react-native';
 import { useDrawerStore } from '../../../store/drawerStore';
 import { useUserStore, AvatarId } from '../../../store/userStore';
@@ -17,24 +17,26 @@ import Animated, {
 } from 'react-native-reanimated';
 import { TYPOGRAPHY } from '../../../shared/theme/typography';
 import { MapService } from '../services/map_service';
-
-// 🔥 IMPORTAMOS DEVICE INFO PARA LEER LA VERSIÓN REAL
 import DeviceInfo from 'react-native-device-info';
+
+// 🔥 NUEVO: importamos los motores de auth para cerrar sesión correctamente
+import { firebaseAuth } from '../../../shared/config/firebase';
+import { GoogleSignin } from '@react-native-google-signin/google-signin';
 
 const { width } = Dimensions.get('window');
 const DRAWER_WIDTH = width * 0.72;
 
 const AVATAR_IMAGES: Record<AvatarId, any> = {
-  economista: require('../../../assets/ECONOMISTA.png'), 
+  economista:  require('../../../assets/ECONOMISTA.png'), 
   humanidades: require('../../../assets/HUMANIDADES.png'),
-  ingeniero: require('../../../assets/INGENIERO.png'), 
-  salud: require('../../../assets/SALUD.png'),
+  ingeniero:   require('../../../assets/INGENIERO.png'), 
+  salud:       require('../../../assets/SALUD.png'),
 };
 
 const AVATAR_LIST: { id: AvatarId; label: string }[] = [ 
-  { id: 'ingeniero', label: 'Ing.' }, 
-  { id: 'salud', label: 'Salud' }, 
-  { id: 'economista', label: 'Econ.' }, 
+  { id: 'ingeniero',   label: 'Ing.' }, 
+  { id: 'salud',       label: 'Salud' }, 
+  { id: 'economista',  label: 'Econ.' }, 
   { id: 'humanidades', label: 'Hum.' } 
 ];
 
@@ -43,102 +45,107 @@ export const CustomDrawer = () => {
   const { username, avatar, setAvatar, logout, nickname } = useUserStore();
   const { isDarkMode, toggleTheme } = useThemeStore() as any; 
 
-  const [isExpanding, setIsExpanding] = useState(false);
-  
-  const [modalVisible, setModalVisible] = useState(false);
-  const [rating, setRating] = useState(0);
-  const [feedback, setFeedback] = useState("");
-  const [isSending, setIsSending] = useState(false);
+  const [isExpanding,   setIsExpanding]   = useState(false);
+  const [modalVisible,  setModalVisible]  = useState(false);
+  const [rating,        setRating]        = useState(0);
+  const [feedback,      setFeedback]      = useState('');
+  const [isSending,     setIsSending]     = useState(false);
+  const [appVersion,    setAppVersion]    = useState('');
 
-  // ✨ ESTADO PARA LA VERSIÓN DE LA APP
-  const [appVersion, setAppVersion] = useState('');
-
-  const translateX = useSharedValue(-DRAWER_WIDTH - 50); 
+  const translateX      = useSharedValue(-DRAWER_WIDTH - 50); 
   const backdropOpacity = useSharedValue(0);
 
-  // 🔥 2. EL EFECTO INTERCEPTOR DEL BOTÓN ATRÁS DE ANDROID
+  // Interceptor botón atrás de Android
   useEffect(() => {
     const onBackPress = () => {
-      if (isOpen) {
-        closeDrawer();
-        return true;
-      }
+      if (isOpen) { closeDrawer(); return true; }
       return false;
     };
-
-    // addEventListener devuelve una suscripción
     const subscription = BackHandler.addEventListener('hardwareBackPress', onBackPress);
-
-    // En el cleanup, usamos .remove() sobre la suscripción
-    return () => {
-      subscription.remove();
-    };
+    return () => subscription.remove();
   }, [isOpen, closeDrawer]);
-  // -----------------------------------------------------------
 
-  // 🔥 EFECTO PARA OBTENER LA VERSIÓN AL CARGAR EL DRAWER
+  // Versión de la app
   useEffect(() => {
-    const fetchVersion = async () => {
-      const version = DeviceInfo.getVersion();
-      setAppVersion(`v.${version}`);
-    };
-    fetchVersion();
+    setAppVersion(`v.${DeviceInfo.getVersion()}`);
   }, []);
 
+  // Animación del drawer
   useEffect(() => {
     if (isOpen) {
-      translateX.value = withSpring(0, { damping: 20, stiffness: 150, overshootClamping: true });
+      translateX.value      = withSpring(0, { damping: 20, stiffness: 150, overshootClamping: true });
       backdropOpacity.value = withTiming(1, { duration: 300 });
     } else {
-      translateX.value = withSpring(-DRAWER_WIDTH - 50, { damping: 20, stiffness: 150 });
+      translateX.value      = withSpring(-DRAWER_WIDTH - 50, { damping: 20, stiffness: 150 });
       backdropOpacity.value = withTiming(0, { duration: 300 });
       setIsExpanding(false);
     }
   }, [isOpen]);
 
-  const animatedDrawerStyle = useAnimatedStyle(() => ({ 
+  const animatedDrawerStyle   = useAnimatedStyle(() => ({ 
     transform: [{ translateX: translateX.value }], 
     opacity: translateX.value <= -DRAWER_WIDTH ? 0 : 1 
   }));
-
-  const animatedBackdropStyle = useAnimatedStyle(() => ({ 
-    opacity: backdropOpacity.value 
-  }));
+  const animatedBackdropStyle = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
 
   const theme = { 
-    bg: isDarkMode ? '#121212' : '#F4F7F9', 
-    card: isDarkMode ? '#1E1E1E' : '#FFFFFF', 
-    text: isDarkMode ? '#FFFFFF' : '#1A1A1A', 
-    subText: isDarkMode ? '#A0A0A0' : '#666666', 
-    headerGradient: isDarkMode ? ['#0F172A', '#1E293B'] : [COLORS.primary, '#00AEEF'] 
+    bg:             isDarkMode ? '#121212'          : '#F4F7F9', 
+    card:           isDarkMode ? '#1E1E1E'          : '#FFFFFF', 
+    text:           isDarkMode ? '#FFFFFF'          : '#1A1A1A', 
+    subText:        isDarkMode ? '#A0A0A0'          : '#666666', 
+    headerGradient: isDarkMode ? ['#0F172A','#1E293B'] : [COLORS.primary,'#00AEEF'], 
   };
 
   const availableAvatars = AVATAR_LIST.filter(item => item.id !== avatar);
 
   const handleSendFeedback = async () => {
     if (rating === 0) {
-      Alert.alert("Atención", "Por favor, selecciona una calificación con estrellas.");
+      Alert.alert('Atención', 'Por favor, selecciona una calificación con estrellas.');
       return;
     }
-
     setIsSending(true);
     const success = await MapService.sendFeedback({
       username: username || 'Anónimo',
-      avatar: avatar || 'Estudiante',
+      avatar:   avatar   || 'Estudiante',
       rating,
-      mensaje: feedback,
+      mensaje:  feedback,
     });
-
     if (success) {
-      Alert.alert("¡Enviado!", "Tu opinión ha sido registrada con éxito.");
+      Alert.alert('¡Enviado!', 'Tu opinión ha sido registrada con éxito.');
       setModalVisible(false);
       setRating(0);
-      setFeedback("");
+      setFeedback('');
     } else {
-      Alert.alert("Error", "No se pudo enviar el comentario. Intenta de nuevo.");
+      Alert.alert('Error', 'No se pudo enviar el comentario. Intenta de nuevo.');
     }
     setIsSending(false);
   };
+
+  // ── 🔥 LOGOUT CORREGIDO ────────────────────────────────────────────────────
+  const handleLogout = async () => {
+    closeDrawer();
+    setTimeout(async () => {
+      try {
+        // 1. Cierra sesión en Firebase Auth (email/password y Google comparten esto)
+        await firebaseAuth.signOut();
+
+        // 2. Cierra sesión en Google Sign-In para que la próxima vez
+        //    muestre el selector de cuentas en lugar de loguearse solo
+        const currentGoogleUser = GoogleSignin.getCurrentUser();
+        if (currentGoogleUser) {
+          await GoogleSignin.signOut();
+        }
+      } catch (error) {
+        // Si algo falla en el signOut de Firebase/Google,
+        // igual limpiamos el estado local para no dejar al usuario trabado
+        console.warn('Error en signOut:', error);
+      } finally {
+        // 3. Siempre limpiamos el store local (Zustand + AsyncStorage)
+        logout();
+      }
+    }, 200);
+  };
+  // ──────────────────────────────────────────────────────────────────────────
 
   return (
     <View style={styles.overlay} pointerEvents="box-none">
@@ -176,15 +183,15 @@ export const CustomDrawer = () => {
           <View style={styles.bentoRow}>
             <View style={[styles.bentoCard, { backgroundColor: theme.card }]}>
               <View style={[styles.iconCircle, { backgroundColor: COLORS.primary + '15', marginBottom: 8 }]}>
-                <Icon name={isDarkMode ? "weather-night" : "weather-sunny"} size={20} color={COLORS.primary} />
+                <Icon name={isDarkMode ? 'weather-night' : 'weather-sunny'} size={20} color={COLORS.primary} />
               </View>
               <Text style={[styles.bentoTitle, { color: theme.text }]}>Tema</Text>
               <Switch 
-                style={{marginTop: 5, transform: [{ scale: 0.8 }]}} 
+                style={{ marginTop: 5, transform: [{ scale: 0.8 }] }} 
                 value={isDarkMode} 
                 onValueChange={toggleTheme} 
                 trackColor={{ false: '#D1D1D1', true: COLORS.primary }} 
-                thumbColor={isDarkMode ? COLORS.primary : "#f4f3f4"} 
+                thumbColor={isDarkMode ? COLORS.primary : '#f4f3f4'} 
               />
             </View>
 
@@ -208,14 +215,20 @@ export const CustomDrawer = () => {
                 </View>
                 <Text style={[styles.menuText, { color: theme.text }]}>Cambiar Avatar</Text>
               </View>
-              <Icon name={isExpanding ? "chevron-up" : "chevron-down"} size={22} color={COLORS.primary} />
+              <Icon name={isExpanding ? 'chevron-up' : 'chevron-down'} size={22} color={COLORS.primary} />
             </TouchableOpacity>
 
             {isExpanding && (
               <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)} style={styles.avatarSelectionRow}>
                 {availableAvatars.map((item) => (
-                  <TouchableOpacity key={item.id} style={styles.avatarOption} onPress={() => { setAvatar(item.id); setIsExpanding(false); }}>
-                    <View style={styles.smallAvatarCircle}><Image source={AVATAR_IMAGES[item.id]} style={styles.smallAvatarImg} /></View>
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.avatarOption}
+                    onPress={() => { setAvatar(item.id); setIsExpanding(false); }}
+                  >
+                    <View style={styles.smallAvatarCircle}>
+                      <Image source={AVATAR_IMAGES[item.id]} style={styles.smallAvatarImg} />
+                    </View>
                     <Text style={[styles.smallAvatarLabel, { color: theme.subText }]}>{item.label}</Text>
                   </TouchableOpacity>
                 ))}
@@ -223,12 +236,10 @@ export const CustomDrawer = () => {
             )}
           </Animated.View>
 
+          {/* 🔥 BOTÓN LOGOUT — ahora llama handleLogout */}
           <TouchableOpacity 
             style={[styles.logoutButton, { backgroundColor: isDarkMode ? 'rgba(255,82,82,0.05)' : '#FFF5F5' }]} 
-            onPress={() => { 
-              closeDrawer(); 
-              setTimeout(() => { logout(); }, 200);
-            }}
+            onPress={handleLogout}
           >
             <View style={styles.row}>
               <View style={[styles.iconCircle, { backgroundColor: 'rgba(255,82,82,0.1)' }]}>
@@ -244,26 +255,26 @@ export const CustomDrawer = () => {
         </View>
       </Animated.View>
 
+      {/* MODAL DE FEEDBACK */}
       <Modal visible={modalVisible} transparent animationType="slide" onRequestClose={() => setModalVisible(false)}>
-        <KeyboardAvoidingView 
-          behavior={Platform.OS === 'ios' ? 'padding' : 'height'} 
-          style={{flex: 1}}
-        >
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
           <View style={styles.modalOverlay}>
             <TouchableWithoutFeedback onPress={() => setModalVisible(false)}>
-              <View style={{flex: 1}} />
+              <View style={{ flex: 1 }} />
             </TouchableWithoutFeedback>
             
             <View style={[styles.bottomSheet, { backgroundColor: theme.bg }]}>
-              {/* Agregamos una barra pequeña para indicar que se puede deslizar */}
               <View style={styles.sheetHandle} />
-              
               <Text style={[styles.sheetTitle, { color: theme.text }]}>¿Cómo puedo mejorar?</Text>
               
               <View style={styles.starsRowModal}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <TouchableOpacity key={star} onPress={() => setRating(star)}>
-                    <Icon name={rating >= star ? "star" : "star-outline"} size={36} color={rating >= star ? "#FFD700" : theme.subText} />
+                    <Icon
+                      name={rating >= star ? 'star' : 'star-outline'}
+                      size={36}
+                      color={rating >= star ? '#FFD700' : theme.subText}
+                    />
                   </TouchableOpacity>
                 ))}
               </View>
@@ -276,7 +287,6 @@ export const CustomDrawer = () => {
                 numberOfLines={4}
                 value={feedback} 
                 onChangeText={setFeedback} 
-                // Evita que el modal se cierre accidentalmente al escribir
                 blurOnSubmit={false}
               />
               
@@ -290,7 +300,7 @@ export const CustomDrawer = () => {
                 ) : (
                   <>
                     <Text style={styles.sendBtnText}>Enviar</Text>
-                    <Icon name="check-circle-outline" size={18} color="#FFF" style={{marginLeft: 8}}/>
+                    <Icon name="check-circle-outline" size={18} color="#FFF" style={{ marginLeft: 8 }} />
                   </>
                 )}
               </TouchableOpacity>
@@ -303,48 +313,49 @@ export const CustomDrawer = () => {
 };
 
 const styles = StyleSheet.create({
-  overlay: { ...StyleSheet.absoluteFillObject, zIndex: 9999 },
-  backdrop: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
+  overlay:         { ...StyleSheet.absoluteFillObject, zIndex: 9999 },
+  backdrop:        { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.5)' },
   drawerContainer: { 
     width: DRAWER_WIDTH, height: '100%', elevation: 25, 
     borderTopRightRadius: 25, borderBottomRightRadius: 25, 
-    overflow: 'hidden', position: 'absolute', left: 0, top: 0, bottom: 0 
+    overflow: 'hidden', position: 'absolute', left: 0, top: 0, bottom: 0,
   },
-  header: { height: 160, paddingTop: 40, alignItems: 'center' },
-  brandText: { color: 'white', fontSize: 14, fontFamily: TYPOGRAPHY.primary.bold, opacity: 0.9, letterSpacing: 2, marginTop: 18 },  
-  avatarWrapper: { alignItems: 'center', marginTop: -50, marginBottom: 10 },
+  header:      { height: 160, paddingTop: 40, alignItems: 'center' },
+  brandText:   { color: 'white', fontSize: 14, fontFamily: TYPOGRAPHY.primary.bold, opacity: 0.9, letterSpacing: 2, marginTop: 18 },  
+  avatarWrapper:   { alignItems: 'center', marginTop: -50, marginBottom: 10 },
   avatarContainer: { width: 100, height: 100, borderRadius: 50, borderWidth: 4, justifyContent: 'center', alignItems: 'center', elevation: 10 },
-  avatarImage: { width: '100%', height: '100%', borderRadius: 50, resizeMode: 'cover' },
-  userInfo: { alignItems: 'center', marginBottom: 25, paddingHorizontal: 10 },
-  userName: { fontSize: 22, fontFamily: TYPOGRAPHY.primary.bold, textAlign: 'center' },
-  facultyBadge: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 6 },
-  facultyText: { fontSize: 11, marginLeft: 5, fontFamily: TYPOGRAPHY.primary.bold, letterSpacing: 0.5 },
-  content: { paddingHorizontal: 15, flex: 1, paddingBottom: 20 },
-  bentoRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  bentoCard: { flex: 1, borderRadius: 18, padding: 15, elevation: 2, alignItems: 'center', marginHorizontal: 4 },
-  bentoTitle: { fontFamily: TYPOGRAPHY.primary.bold, fontSize: 13 },
-  bentoSubtitle: { fontFamily: TYPOGRAPHY.primary.semiBold, fontSize: 10 },
-  menuCard: { borderRadius: 18, paddingHorizontal: 12, paddingVertical: 5, elevation: 2, overflow: 'hidden' },
-  menuItemSpace: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  iconCircle: { width: 38, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
-  menuText: { marginLeft: 12, fontSize: 15, fontFamily: TYPOGRAPHY.primary.semiBold },
+  avatarImage:     { width: '100%', height: '100%', borderRadius: 50, resizeMode: 'cover' },
+  userInfo:        { alignItems: 'center', marginBottom: 25, paddingHorizontal: 10 },
+  userName:        { fontSize: 22, fontFamily: TYPOGRAPHY.primary.bold, textAlign: 'center' },
+  facultyBadge:    { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20, marginTop: 6 },
+  facultyText:     { fontSize: 11, marginLeft: 5, fontFamily: TYPOGRAPHY.primary.bold, letterSpacing: 0.5 },
+  content:         { paddingHorizontal: 15, flex: 1, paddingBottom: 20 },
+  bentoRow:        { flexDirection: 'row', justifyContent: 'space-between' },
+  bentoCard:       { flex: 1, borderRadius: 18, padding: 15, elevation: 2, alignItems: 'center', marginHorizontal: 4 },
+  bentoTitle:      { fontFamily: TYPOGRAPHY.primary.bold, fontSize: 13 },
+  bentoSubtitle:   { fontFamily: TYPOGRAPHY.primary.semiBold, fontSize: 10 },
+  menuCard:        { borderRadius: 18, paddingHorizontal: 12, paddingVertical: 5, elevation: 2, overflow: 'hidden' },
+  menuItemSpace:   { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 10 },
+  row:             { flexDirection: 'row', alignItems: 'center' },
+  iconCircle:      { width: 38, height: 38, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  menuText:        { marginLeft: 12, fontSize: 15, fontFamily: TYPOGRAPHY.primary.semiBold },
   avatarSelectionRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 15, paddingHorizontal: 5, borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)' },
-  avatarOption: { alignItems: 'center', width: '30%' },
-  smallAvatarCircle: { width: 50, height: 50, borderRadius: 25, backgroundColor: '#F0F0F0', overflow: 'hidden', borderWidth: 1, borderColor: '#DDD' },
-  smallAvatarImg: { width: '100%', height: '100%', resizeMode: 'cover' },
-  smallAvatarLabel: { fontSize: 10, fontFamily: TYPOGRAPHY.primary.bold, marginTop: 5 },
-  logoutButton: { flexDirection: 'row', alignItems: 'center', padding: 12, borderRadius: 15, marginTop: 'auto' },
-  logoutText: { marginLeft: 12, fontSize: 15, color: '#FF5252', fontFamily: TYPOGRAPHY.primary.bold },
-  footer: { paddingBottom: 15, alignItems: 'center' },
-  versionText: { fontSize: 10, opacity: 0.5, fontFamily: TYPOGRAPHY.primary.bold },
-  
-  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  bottomSheet: { borderTopLeftRadius: 30, borderTopRightRadius: 30, paddingHorizontal: 25, paddingBottom: 40, paddingTop: 15, elevation: 20 },
-  sheetHandle: { width: 40, height: 5, borderRadius: 5, backgroundColor: '#CCC', alignSelf: 'center', marginBottom: 20 },
-  sheetTitle: { fontFamily: TYPOGRAPHY.primary.bold, fontSize: 18, textAlign: 'center', marginBottom: 15 },
-  starsRowModal: { flexDirection: 'row', justifyContent: 'space-around', marginHorizontal: 20, marginBottom: 20 },
-  feedbackInputModal: { borderRadius: 15, padding: 15, height: 100, textAlignVertical: 'top', fontFamily: TYPOGRAPHY.primary.regular, fontSize: 14, marginBottom: 20 },
-  sendBtnModal: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center', paddingVertical: 15, borderRadius: 15 },
-  sendBtnText: { color: 'white', fontFamily: TYPOGRAPHY.primary.bold, fontSize: 15 }
+  avatarOption:    { alignItems: 'center', width: '30%' },
+  smallAvatarCircle: { width: 50, height: 50, borderRadius: 25, backgroundColor: COLORS.primary + '15', justifyContent: 'center', alignItems: 'center', marginBottom: 5, overflow: 'hidden' },
+  smallAvatarImg:  { width: '80%', height: '80%', resizeMode: 'contain' },
+  smallAvatarLabel:{ fontSize: 10, fontFamily: TYPOGRAPHY.primary.semiBold, textAlign: 'center' },
+  logoutButton:    { flexDirection: 'row', alignItems: 'center', padding: 14, borderRadius: 18, marginTop: 12 },
+  logoutText:      { marginLeft: 12, fontSize: 15, fontFamily: TYPOGRAPHY.primary.semiBold, color: '#FF5252' },
+  footer:          { padding: 20, alignItems: 'center' },
+  versionText:     { fontSize: 11, fontFamily: TYPOGRAPHY.primary.regular },
+
+  // Modal de feedback
+  modalOverlay:      { flex: 1, justifyContent: 'flex-end' },
+  bottomSheet:       { borderTopLeftRadius: 28, borderTopRightRadius: 28, padding: 24, paddingBottom: 40, alignItems: 'center' },
+  sheetHandle:       { width: 40, height: 5, backgroundColor: '#E0E0E0', borderRadius: 3, marginBottom: 20 },
+  sheetTitle:        { fontSize: 20, fontFamily: TYPOGRAPHY.primary.bold, marginBottom: 16 },
+  starsRowModal:     { flexDirection: 'row', gap: 8, marginBottom: 20 },
+  feedbackInputModal:{ width: '100%', borderRadius: 14, padding: 14, minHeight: 100, textAlignVertical: 'top', fontSize: 14, fontFamily: TYPOGRAPHY.primary.regular, marginBottom: 16 },
+  sendBtnModal:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', width: '100%', borderRadius: 14, paddingVertical: 15 },
+  sendBtnText:       { color: '#FFF', fontSize: 16, fontFamily: TYPOGRAPHY.primary.semiBold },
 });
