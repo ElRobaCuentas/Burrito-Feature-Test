@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,6 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Keyboard,
-  TouchableWithoutFeedback,
   Image,
   ActivityIndicator,
   Alert,
@@ -18,9 +16,9 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import Animated, {
-  FadeInDown, FadeInUp, FadeIn,
-  useSharedValue, useAnimatedStyle, withSpring, withTiming,
-  withRepeat, withSequence, runOnJS,
+  FadeInDown, FadeInUp,
+  useSharedValue, useAnimatedStyle,
+  withRepeat, withSequence, withTiming,
 } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -37,7 +35,7 @@ import { TYPOGRAPHY }                     from '../../../shared/theme/typography
 type NavProp = StackNavigationProp<RootStackParams, 'SignUpScreen'>;
 
 const AVATARES = [
-  { id: 'ingeniero',   label: 'INGENIERIA',           url: require('../../../assets/INGENIERO.png'),  color: '#FF5757' },
+  { id: 'ingeniero',   label: 'INGENIERÍA',           url: require('../../../assets/INGENIERO.png'),  color: '#FF5757' },
   { id: 'economista',  label: 'CIENCIAS ECONÓMICAS',  url: require('../../../assets/ECONOMISTA.png'), color: '#FFBD59' },
   { id: 'salud',       label: 'CIENCIAS DE LA SALUD', url: require('../../../assets/SALUD.png'),      color: '#8C52FF' },
   { id: 'humanidades', label: 'HUMANIDADES',           url: require('../../../assets/HUMANIDADES.png'),color: '#5CE1E6' },
@@ -46,32 +44,19 @@ const AVATARES = [
 export const SignUpScreen = () => {
   const navigation = useNavigation<NavProp>();
   const insets     = useSafeAreaInsets();
-  const { width: screenWidth, height: screenHeight } = useWindowDimensions();
+  const { width: screenWidth } = useWindowDimensions();
   const { login }  = useUserStore();
 
   const [username,   setUsername]   = useState('');
   const [email,      setEmail]      = useState('');
   const [password,   setPassword]   = useState('');
   const [showPass,   setShowPass]   = useState(false);
-
-  // ── BUG FIX: dos estados separados ──────────────────────────────────────
-  // selectedId  → avatar CONFIRMADO (sobrevive al cierre del sheet ✅)
-  // sheetOpenId → solo indica qué sheet está abierto en este momento
-  const [selectedId,  setSelectedId]  = useState<string | null>(null);
-  const [sheetOpenId, setSheetOpenId] = useState<string | null>(null);
-
+  const [selectedId, setSelectedId] = useState<string | null>(null); // avatar confirmado
   const [loading,    setLoading]    = useState(false);
   const [googleLoad, setGoogleLoad] = useState(false);
 
-  const sheetY          = useSharedValue(screenHeight);
-  const backdropOpacity = useSharedValue(0);
-  const breathing       = useSharedValue(1);
-
-  const horizontalPadding = 24;
-  const gap                = 16;
-  const avatarWrapperWidth = (screenWidth - horizontalPadding * 2 - gap) / 2;
-  const circleSize         = avatarWrapperWidth * 0.78;
-
+  // Breathing animation
+  const breathing = useSharedValue(1);
   useEffect(() => {
     breathing.value = withRepeat(
       withSequence(
@@ -81,42 +66,13 @@ export const SignUpScreen = () => {
       -1, true,
     );
   }, []);
-
-  // Avatar mostrado DENTRO del sheet (usa sheetOpenId, no selectedId)
-  const sheetAvatar = useMemo(() =>
-    AVATARES.find(a => a.id === sheetOpenId), [sheetOpenId]);
-
-  // Abrir sheet: solo abre, NO confirma todavía
-  const openSheet = useCallback((id: string) => {
-    setSheetOpenId(id);
-    backdropOpacity.value = withTiming(1, { duration: 300 });
-    sheetY.value = withSpring(0, { damping: 20, stiffness: 120 });
-  }, []);
-
-  // Confirmar: AHORA sí guarda el avatar en selectedId y cierra
-  const confirmSheet = useCallback(() => {
-    if (sheetOpenId) {
-      setSelectedId(sheetOpenId); // ← persiste la selección real
-    }
-    Keyboard.dismiss();
-    backdropOpacity.value = withTiming(0, { duration: 300 });
-    sheetY.value = withTiming(screenHeight, { duration: 300 }, (finished) => {
-      if (finished) runOnJS(setSheetOpenId)(null); // solo limpia el sheet, NO selectedId
-    });
-  }, [sheetOpenId, screenHeight]);
-
-  // Cancelar: cierra sin guardar nada
-  const cancelSheet = useCallback(() => {
-    Keyboard.dismiss();
-    backdropOpacity.value = withTiming(0, { duration: 300 });
-    sheetY.value = withTiming(screenHeight, { duration: 300 }, (finished) => {
-      if (finished) runOnJS(setSheetOpenId)(null);
-    });
-  }, [screenHeight]);
-
   const breathingStyle = useAnimatedStyle(() => ({ transform: [{ scale: breathing.value }] }));
-  const backdropStyle  = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
-  const sheetStyle     = useAnimatedStyle(() => ({ transform: [{ translateY: sheetY.value }] }));
+
+  // Tamaños dinámicos del grid
+  const horizontalPadding = 24;
+  const gap                = 16;
+  const avatarWrapperWidth = (screenWidth - horizontalPadding * 2 - gap) / 2;
+  const circleSize         = avatarWrapperWidth * 0.78;
 
   // ─── REGISTRO EMAIL / PASSWORD ────────────────────────────────────────────
   const handleRegister = async () => {
@@ -200,23 +156,29 @@ export const SignUpScreen = () => {
           showsVerticalScrollIndicator={false}
         >
           {/* BACK */}
-          <Animated.View entering={FadeInUp.duration(300)}>
+          <Animated.View 
+            // entering={FadeInUp.duration(300)}
+            >
             <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
               <Icon name="chevron-left" size={28} color="#1A1A1A" />
             </TouchableOpacity>
           </Animated.View>
 
           {/* TÍTULO */}
-          <Animated.View entering={FadeInUp.delay(100).springify().damping(14)} style={styles.titleWrapper}>
+          <Animated.View 
+            // entering={FadeInUp.delay(100).springify().damping(25)} 
+            style={styles.titleWrapper}>
             <Text style={styles.title}>¡Hola!{'\n'}Regístrate para{'\n'}empezar</Text>
           </Animated.View>
 
           {/* CAMPOS */}
-          <Animated.View entering={FadeInDown.delay(200).springify().damping(14)} style={styles.form}>
+          <Animated.View 
+            // entering={FadeInDown.delay(200).springify().damping(25)} 
+            style={styles.form}>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Username"
+                placeholder="Nombre de usuario"
                 placeholderTextColor="#AAAAAA"
                 autoCapitalize="words"
                 value={username}
@@ -227,7 +189,7 @@ export const SignUpScreen = () => {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
-                placeholder="Email"
+                placeholder="Correo electrónico"
                 placeholderTextColor="#AAAAAA"
                 keyboardType="email-address"
                 autoCapitalize="none"
@@ -238,7 +200,7 @@ export const SignUpScreen = () => {
             <View style={styles.inputWrapper}>
               <TextInput
                 style={[styles.input, { paddingRight: 50 }]}
-                placeholder="Password"
+                placeholder="Contraseña"
                 placeholderTextColor="#AAAAAA"
                 secureTextEntry={!showPass}
                 autoCapitalize="none"
@@ -252,69 +214,67 @@ export const SignUpScreen = () => {
           </Animated.View>
 
           {/* AVATAR SECTION */}
-          <Animated.View entering={FadeInDown.delay(300).springify().damping(14)} style={styles.avatarSection}>
+          <Animated.View 
+            // entering={FadeInDown.delay(300).springify().damping(25)} 
+            style={styles.avatarSection}>
             <Text style={styles.avatarSectionTitle}>ELIGE TU AVATAR</Text>
             <View style={[styles.avatarGrid, { gap }]}>
-              {AVATARES.map((item) => (
-                <Animated.View key={item.id} style={[{ width: avatarWrapperWidth }, breathingStyle]}>
-                  <TouchableOpacity
-                    activeOpacity={0.8}
-                    onPress={() => openSheet(item.id)}
-                    style={[
-                      styles.avatarButton,
-                      selectedId === item.id && { borderColor: item.color, borderWidth: 2.5 },
-                    ]}
-                  >
-                    {/* BUG FIX 1: overflow:'hidden' recorta la imagen al círculo */}
-                    <View style={[
-                      styles.circle,
-                      {
-                        width: circleSize,
-                        height: circleSize,
-                        borderRadius: circleSize / 2,
-                        backgroundColor: selectedId === item.id
-                          ? item.color + '40'
-                          : item.color + '22',
-                      },
-                    ]}>
-                      <Image
-                        source={item.url}
-                        style={[
-                          styles.imageAvatar,
-                          {
-                            width: circleSize,
-                            height: circleSize,
-                            borderRadius: circleSize / 2,
-                          },
-                        ]}
-                        resizeMode="cover"
-                      />
-                    </View>
-
-                    <Text style={[
-                      styles.avatarLabel,
-                      selectedId === item.id && {
-                        color: item.color,
-                        fontFamily: TYPOGRAPHY.primary.bold,
-                      },
-                    ]}>
-                      {item.label}
-                    </Text>
-
-                    {/* Checkmark visual cuando está confirmado */}
-                    {selectedId === item.id && (
-                      <View style={[styles.checkBadge, { backgroundColor: item.color }]}>
-                        <Icon name="check" size={10} color="#FFF" />
+              {AVATARES.map((item) => {
+                const isSelected = selectedId === item.id;
+                return (
+                  <Animated.View key={item.id} style={[{ width: avatarWrapperWidth }, breathingStyle]}>
+                    <TouchableOpacity
+                      activeOpacity={0.8}
+                      // ← CAMBIO CLAVE: toca avatar = selecciona directo, sin BottomSheet
+                      onPress={() => setSelectedId(item.id)}
+                      style={[
+                        styles.avatarButton,
+                        isSelected && { borderColor: item.color, borderWidth: 2.5 },
+                      ]}
+                    >
+                      <View style={[
+                        styles.circle,
+                        {
+                          width: circleSize,
+                          height: circleSize,
+                          borderRadius: circleSize / 2,
+                          backgroundColor: isSelected ? item.color + '40' : item.color + '22',
+                        },
+                      ]}>
+                        <Image
+                          source={item.url}
+                          style={[
+                            styles.imageAvatar,
+                            { width: circleSize, height: circleSize, borderRadius: circleSize / 2 },
+                          ]}
+                          resizeMode="cover"
+                        />
                       </View>
-                    )}
-                  </TouchableOpacity>
-                </Animated.View>
-              ))}
+
+                      <Text style={[
+                        styles.avatarLabel,
+                        isSelected && { color: item.color, fontFamily: TYPOGRAPHY.primary.bold },
+                      ]}>
+                        {item.label}
+                      </Text>
+
+                      {/* Checkmark cuando está seleccionado */}
+                      {isSelected && (
+                        <View style={[styles.checkBadge, { backgroundColor: item.color }]}>
+                          <Icon name="check" size={10} color="#FFF" />
+                        </View>
+                      )}
+                    </TouchableOpacity>
+                  </Animated.View>
+                );
+              })}
             </View>
           </Animated.View>
 
           {/* ACCIONES */}
-          <Animated.View entering={FadeInDown.delay(400).springify().damping(14)} style={styles.actionsWrapper}>
+          <Animated.View 
+            // entering={FadeInDown.delay(400).springify().damping(25)} 
+            style={styles.actionsWrapper}>
             <TouchableOpacity
               style={[styles.btnRegister, loading && styles.btnDisabled]}
               activeOpacity={0.85}
@@ -323,13 +283,13 @@ export const SignUpScreen = () => {
             >
               {loading
                 ? <ActivityIndicator color="#FFF" />
-                : <Text style={styles.btnRegisterText}>Register</Text>
+                : <Text style={styles.btnRegisterText}>Registrarse</Text>
               }
             </TouchableOpacity>
 
             <View style={styles.dividerRow}>
               <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>Or Register with</Text>
+              <Text style={styles.dividerText}>O regístrate con</Text>
               <View style={styles.dividerLine} />
             </View>
 
@@ -339,69 +299,22 @@ export const SignUpScreen = () => {
               onPress={handleGoogleRegister}
               disabled={googleLoad}
             >
-              {googleLoad
-                ? <ActivityIndicator color={COLORS.primary} size="small" />
-                : <Icon name="google" size={26} color="#DB4437" />
-              }
+            <Image
+              source={require('../../../assets/google_logo.png')}
+              style={{ width: 24, height: 24 }}
+              resizeMode="contain"
+            />
+              
             </TouchableOpacity>
           </Animated.View>
 
           <View style={styles.footerRow}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+            <Text style={styles.footerText}>¿Ya tienes cuenta? </Text>
             <TouchableOpacity onPress={() => navigation.replace('SignInScreen')}>
-              <Text style={styles.footerLink}>Login Now</Text>
+              <Text style={styles.footerLink}>Inicia sesión</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
-      </KeyboardAvoidingView>
-
-      {/* ── BACKDROP ── */}
-      <Animated.View
-        style={[styles.backdrop, backdropStyle]}
-        pointerEvents={sheetOpenId ? 'auto' : 'none'}
-      >
-        <TouchableWithoutFeedback onPress={cancelSheet}>
-          <View style={StyleSheet.absoluteFill} />
-        </TouchableWithoutFeedback>
-      </Animated.View>
-
-      {/* ── BOTTOM SHEET ── */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="box-none"
-      >
-        <Animated.View style={[styles.bottomSheet, sheetStyle]}>
-          <View style={styles.sheetHandle} />
-
-          {sheetAvatar && (
-            <Animated.View entering={FadeIn} style={styles.heroAvatarContainer}>
-              {/* BUG FIX 1 también aquí: overflow hidden */}
-              <View style={[
-                styles.heroCircle,
-                { backgroundColor: sheetAvatar.color + '40' },
-              ]}>
-                <Image
-                  source={sheetAvatar.url}
-                  style={styles.imageHero}
-                  resizeMode="cover"
-                />
-              </View>
-            </Animated.View>
-          )}
-
-          <Text style={styles.sheetTitle}>{sheetAvatar?.label ?? ''}</Text>
-          {/* <Text style={styles.sheetSubtitle}>¿Esta es tu facultad?</Text> */}
-
-          {/* ¡Listo! llama confirmSheet → guarda selectedId ✅ */}
-          <TouchableOpacity style={styles.btnConfirm} onPress={confirmSheet}>
-            <Text style={styles.btnConfirmText}>¡Listo!</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity style={styles.btnCancelSheet} onPress={cancelSheet}>
-            <Text style={styles.btnCancelText}>Cancelar</Text>
-          </TouchableOpacity>
-        </Animated.View>
       </KeyboardAvoidingView>
     </View>
   );
@@ -468,10 +381,10 @@ const styles = StyleSheet.create({
   circle: {
     justifyContent: 'center',
     alignItems: 'center',
-    overflow: 'hidden', // ← FIX: recorta la imagen al círculo
+    overflow: 'hidden',
   },
   imageAvatar: {
-    // dimensiones y borderRadius se aplican inline con circleSize
+    // width, height y borderRadius se aplican inline con circleSize
   },
   avatarLabel: {
     marginTop: 8,
@@ -528,55 +441,4 @@ const styles = StyleSheet.create({
   footerRow:  { flexDirection: 'row', justifyContent: 'center', marginTop: 28 },
   footerText: { fontSize: 13, fontFamily: TYPOGRAPHY.primary.regular, color: '#888' },
   footerLink: { fontSize: 13, fontFamily: TYPOGRAPHY.primary.semiBold, color: COLORS.primary },
-
-  backdrop: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.45)',
-    zIndex: 10,
-  },
-  bottomSheet: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: '#FFF',
-    borderTopLeftRadius: 28,
-    borderTopRightRadius: 28,
-    paddingHorizontal: 24,
-    paddingBottom: 40,
-    paddingTop: 12,
-    alignItems: 'center',
-    zIndex: 20,
-    elevation: 20,
-  },
-  sheetHandle: {
-    width: 40,
-    height: 5,
-    backgroundColor: '#E0E0E0',
-    borderRadius: 3,
-    marginBottom: 20,
-  },
-  heroAvatarContainer: { alignItems: 'center', marginBottom: 8 },
-  heroCircle: {
-    width: 120,
-    height: 120,
-    borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    overflow: 'hidden', // ← FIX también aquí
-  },
-  imageHero: { width: 120, height: 120, borderRadius: 60 },
-  sheetTitle:    { fontSize: 18, fontFamily: TYPOGRAPHY.primary.bold, color: '#1A1A1A', marginBottom: 10 },
-  sheetSubtitle: { fontSize: 13, fontFamily: TYPOGRAPHY.primary.regular, color: '#888', marginBottom: 24 },
-  btnConfirm: {
-    backgroundColor: COLORS.primary,
-    borderRadius: 14,
-    paddingVertical: 14,
-    paddingHorizontal: 60,
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  btnConfirmText: { color: '#FFF', fontSize: 16, fontFamily: TYPOGRAPHY.primary.semiBold },
-  btnCancelSheet: { paddingVertical: 10, alignItems: 'center' },
-  btnCancelText:  { fontSize: 14, fontFamily: TYPOGRAPHY.primary.medium, color: '#999' },
 });

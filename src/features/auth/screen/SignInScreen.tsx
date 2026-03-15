@@ -10,6 +10,7 @@ import {
   ScrollView,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
@@ -39,7 +40,6 @@ export const SignInScreen = () => {
   const [loading,     setLoading]     = useState(false);
   const [googleLoad,  setGoogleLoad]  = useState(false);
 
-  // ─── LOGIN CON EMAIL / PASSWORD ───────────────────────────────────────────
   const handleEmailLogin = async () => {
     if (!email.trim() || !password.trim()) {
       Alert.alert('Campos vacíos', 'Por favor completa email y contraseña.');
@@ -75,7 +75,6 @@ export const SignInScreen = () => {
     }
   };
 
-  // ─── LOGIN CON GOOGLE ─────────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
     setGoogleLoad(true);
     try {
@@ -115,7 +114,6 @@ export const SignInScreen = () => {
     }
   };
 
-  // ─── RENDER ──────────────────────────────────────────────────────────────
   return (
     <KeyboardAvoidingView
       style={styles.root}
@@ -127,24 +125,29 @@ export const SignInScreen = () => {
         showsVerticalScrollIndicator={false}
       >
         {/* BACK */}
-        <Animated.View entering={FadeInUp.duration(300)}>
+        <Animated.View 
+          // entering={FadeInUp.duration(300)}
+          >
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Icon name="chevron-left" size={28} color="#1A1A1A" />
           </TouchableOpacity>
         </Animated.View>
 
         {/* TÍTULO */}
-        <Animated.View entering={FadeInUp.delay(100).springify().damping(14)} style={styles.titleWrapper}>
+        <Animated.View 
+          // entering={FadeInUp.delay(100).springify().damping(25)} 
+          style={styles.titleWrapper}>
           <Text style={styles.title}>¡Bienvenido!{'\n'}Un gusto verte{'\n'}otra vez :)</Text>
         </Animated.View>
 
         {/* CAMPOS */}
-        <Animated.View entering={FadeInDown.delay(200).springify().damping(14)} style={styles.form}>
-          {/* Email */}
+        <Animated.View 
+          // entering={FadeInDown.delay(200).springify().damping(25)} 
+          style={styles.form}>
           <View style={styles.inputWrapper}>
             <TextInput
               style={styles.input}
-              placeholder="Enter your email"
+              placeholder="correo electrónico"
               placeholderTextColor="#AAAAAA"
               keyboardType="email-address"
               autoCapitalize="none"
@@ -152,12 +155,10 @@ export const SignInScreen = () => {
               onChangeText={setEmail}
             />
           </View>
-
-          {/* Password */}
           <View style={styles.inputWrapper}>
             <TextInput
               style={[styles.input, { paddingRight: 50 }]}
-              placeholder="Enter your password"
+              placeholder="contraseña"
               placeholderTextColor="#AAAAAA"
               secureTextEntry={!showPass}
               autoCapitalize="none"
@@ -172,15 +173,13 @@ export const SignInScreen = () => {
             </TouchableOpacity>
           </View>
 
-          {/* Forgot Password */}
           <TouchableOpacity
             style={styles.forgotWrapper}
             onPress={() => navigation.navigate('ForgotPasswordScreen')}
           >
-            <Text style={styles.forgotText}>Forgot Password?</Text>
+          <Text style={styles.forgotText}>¿Olvidaste tu contraseña?</Text>
           </TouchableOpacity>
 
-          {/* Botón Login */}
           <TouchableOpacity
             style={[styles.btnLogin, loading && styles.btnDisabled]}
             activeOpacity={0.85}
@@ -189,14 +188,14 @@ export const SignInScreen = () => {
           >
             {loading
               ? <ActivityIndicator color="#FFF" />
-              : <Text style={styles.btnLoginText}>Login</Text>
+              : <Text style={styles.btnLoginText}>Iniciar Sesión</Text>
             }
           </TouchableOpacity>
 
           {/* Divider */}
           <View style={styles.dividerRow}>
             <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>Or Login with</Text>
+            <Text style={styles.dividerText}>o</Text>
             <View style={styles.dividerLine} />
           </View>
 
@@ -207,18 +206,21 @@ export const SignInScreen = () => {
             onPress={handleGoogleLogin}
             disabled={googleLoad}
           >
-            {googleLoad
-              ? <ActivityIndicator color={COLORS.primary} size="small" />
-              : <Icon name="google" size={26} color="#DB4437" />
-            }
+          <Image
+            source={require('../../../assets/google_logo.png')}
+            style={{ width: 24, height: 24 }}
+            resizeMode="contain"
+          />
           </TouchableOpacity>
         </Animated.View>
 
         {/* FOOTER LINK */}
-        <Animated.View entering={FadeInDown.delay(350).springify().damping(14)} style={styles.footerRow}>
-          <Text style={styles.footerText}>Don't have an account? </Text>
+        <Animated.View 
+          // entering={FadeInDown.delay(350).springify().damping(25)} 
+          style={styles.footerRow}>
+          <Text style={styles.footerText}>¿No tienes una cuenta? </Text>
           <TouchableOpacity onPress={() => navigation.replace('SignUpScreen')}>
-            <Text style={styles.footerLink}>Register Now</Text>
+            <Text style={styles.footerLink}>Regístrate</Text>
           </TouchableOpacity>
         </Animated.View>
       </ScrollView>

@@ -57,14 +57,18 @@ export const ForgotPasswordScreen = () => {
       <View style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 30 }]}>
 
         {/* BACK */}
-        <Animated.View entering={FadeInUp.duration(300)}>
+        <Animated.View 
+          // entering={FadeInUp.duration(300)}
+          >
           <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
             <Icon name="chevron-left" size={28} color="#1A1A1A" />
           </TouchableOpacity>
         </Animated.View>
 
         {/* TÍTULO */}
-        <Animated.View entering={FadeInUp.delay(100).springify().damping(14)} style={styles.titleWrapper}>
+        <Animated.View 
+          // entering={FadeInUp.delay(100).springify().damping(25)} 
+          style={styles.titleWrapper}>
           <Text style={styles.title}>¿Olvidaste tu{'\n'}contraseña?</Text>
           <Text style={styles.subtitle}>
             Ingresa tu correo y te enviaremos un enlace para restablecerla.
@@ -73,7 +77,9 @@ export const ForgotPasswordScreen = () => {
 
         {/* FORMULARIO o ÉXITO */}
         {!sent ? (
-          <Animated.View entering={FadeInDown.delay(200).springify().damping(14)} style={styles.form}>
+          <Animated.View 
+            // entering={FadeInDown.delay(200).springify().damping(25)} 
+            style={styles.form}>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
@@ -101,7 +107,7 @@ export const ForgotPasswordScreen = () => {
         ) : (
           // ── Estado de éxito ──
           <Animated.View
-            entering={FadeInDown.delay(100).springify().damping(14)}
+            // entering={FadeInDown.delay(100).springify().damping(25)}
             style={styles.successBox}
           >
             <View style={styles.successIconCircle}>

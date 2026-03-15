@@ -90,7 +90,6 @@ export const AvatarPickerScreen = () => {
   const backdropStyle  = useAnimatedStyle(() => ({ opacity: backdropOpacity.value }));
   const sheetStyle     = useAnimatedStyle(() => ({ transform: [{ translateY: sheetY.value }] }));
 
-  // ─── GUARDAR Y CONTINUAR ─────────────────────────────────────────────────
   const handleConfirm = async (avatarId: string) => {
     setLoading(true);
     try {
@@ -103,7 +102,6 @@ export const AvatarPickerScreen = () => {
 
       login(uid, displayName, avatarId as AvatarId, email);
 
-      // Cerrar sheet y navegar
       backdropOpacity.value = withTiming(0, { duration: 200 });
       sheetY.value          = withTiming(screenHeight, { duration: 200 });
       setTimeout(() => navigation.replace('MainApp'), 250);
@@ -114,13 +112,12 @@ export const AvatarPickerScreen = () => {
     }
   };
 
-  // ─── RENDER ──────────────────────────────────────────────────────────────
   return (
     <View style={styles.root}>
       <View style={[styles.container, { paddingTop: insets.top + 24 }]}>
 
         {/* ENCABEZADO */}
-        <Animated.View entering={FadeInUp.delay(100).springify().damping(14)} style={styles.header}>
+        <Animated.View entering={FadeInUp.delay(100).springify().damping(25)} style={styles.header}>
           <Text style={styles.step}>ÚLTIMO PASO</Text>
           <Text style={styles.title}>Elige tu facultad</Text>
           <Text style={styles.subtitle}>
@@ -131,7 +128,7 @@ export const AvatarPickerScreen = () => {
 
         {/* GRID DE AVATARES */}
         <Animated.View
-          entering={FadeInDown.delay(200).springify().damping(14)}
+          entering={FadeInDown.delay(200).springify().damping(25)}
           style={[styles.avatarGrid, { gap }]}
         >
           {AVATARES.map((item) => (
@@ -213,7 +210,6 @@ export const AvatarPickerScreen = () => {
   );
 };
 
-// ─── Estilos ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root:      { flex: 1, backgroundColor: '#FFF' },
   container: { flex: 1, paddingHorizontal: 24 },
