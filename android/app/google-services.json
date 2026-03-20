@@ -15,6 +15,22 @@
       },
       "oauth_client": [
         {
+          "client_id": "677410027288-22kgpogb5slg87u3mdm5o1jl54d5frfl.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.burritodriverapp",
+            "certificate_hash": "a3323f70ff34ee0a46c7ec953d9bed875003e329"
+          }
+        },
+        {
+          "client_id": "677410027288-330e38fgfshcn2gm5q3ogl13hestn494.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.burritodriverapp",
+            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
+          }
+        },
+        {
           "client_id": "677410027288-l5heitld12behdgnqf69rgkav0c6kbvc.apps.googleusercontent.com",
           "client_type": 3
         }
@@ -39,7 +55,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:677410027288:android:b9b8149c3c576b4f5f506d",
         "android_client_info": {
-          "package_name": "com.burritouserapp"
+          "package_name": "com.sythor.burritoapp"
         }
       },
       "oauth_client": [
@@ -47,7 +63,7 @@
           "client_id": "677410027288-5flearh8d4e40iqv4g2a6og5aolgbv5p.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.burritouserapp",
+            "package_name": "com.sythor.burritoapp",
             "certificate_hash": "44194d4ea52280b1db0c5ead4644f2f2b608cb58"
           }
         },
@@ -55,10 +71,39 @@
           "client_id": "677410027288-umtgi4mafqd73jc5avmld9gejnu7e564.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.burritouserapp",
+            "package_name": "com.sythor.burritoapp",
             "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
           }
         },
+        {
+          "client_id": "677410027288-l5heitld12behdgnqf69rgkav0c6kbvc.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxLs5m8QV5FrdtrCygDqLTgEkR9FnRpGs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "677410027288-l5heitld12behdgnqf69rgkav0c6kbvc.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:677410027288:android:7beb07f918eb52545f506d",
+        "android_client_info": {
+          "package_name": "com.sythor.burritoapp"
+        }
+      },
+      "oauth_client": [
         {
           "client_id": "677410027288-l5heitld12behdgnqf69rgkav0c6kbvc.apps.googleusercontent.com",
           "client_type": 3

@@ -21,9 +21,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.burritouserapp"
+    namespace "com.sythor.burritoapp"
     defaultConfig {
-        applicationId "com.burritouserapp"
+        applicationId "com.sythor.burritoapp"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

@@ -1,4 +1,4 @@
-package com.burritouserapp
+package com.sythor.burritoapp
 
 import android.os.Bundle
 import com.zoontek.rnbootsplash.RNBootSplash 
@@ -29,4 +29,4 @@ class MainActivity : ReactActivity() {
    */
   override fun createReactActivityDelegate(): ReactActivityDelegate =
       DefaultReactActivityDelegate(this, mainComponentName, fabricEnabled)
-}
+} 
