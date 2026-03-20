@@ -11,7 +11,6 @@ import {
   Alert,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
-import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -23,31 +22,33 @@ export const ForgotPasswordScreen = () => {
   const navigation = useNavigation();
   const insets     = useSafeAreaInsets();
 
-  const [email,    setEmail]    = useState('');
-  const [loading,  setLoading]  = useState(false);
-  const [sent,     setSent]     = useState(false);
+  const [email,   setEmail]   = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent,    setSent]    = useState(false);
 
   const handleSend = async () => {
-    if (!email.trim()) {
-      Alert.alert('Campo vacío', 'Ingresa tu correo electrónico.');
-      return;
-    }
-    setLoading(true);
-    try {
-      await firebaseAuth.sendPasswordResetEmail(email.trim());
+  if (!email.trim()) {
+    Alert.alert('Campo vacío', 'Ingresa tu correo electrónico.');
+    return;
+  }
+
+  setLoading(true);
+  try {
+    await firebaseAuth.sendPasswordResetEmail(email.trim());
+    setSent(true);
+
+  } catch (error: any) {
+    if (error.code === 'auth/network-request-failed') {
+      Alert.alert('Sin conexión', 'Verifica tu conexión a internet e inténtalo de nuevo.');
+    } else if (error.code === 'auth/invalid-email') {
+      Alert.alert('Correo inválido', 'El formato del correo no es válido.');
+    } else {
       setSent(true);
-    } catch (error: any) {
-      const msg =
-        error.code === 'auth/user-not-found'
-          ? 'No existe una cuenta con ese correo.'
-          : error.code === 'auth/invalid-email'
-          ? 'El formato del correo no es válido.'
-          : 'Ocurrió un error. Inténtalo de nuevo.';
-      Alert.alert('Error', msg);
-    } finally {
-      setLoading(false);
     }
-  };
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <KeyboardAvoidingView
@@ -57,29 +58,21 @@ export const ForgotPasswordScreen = () => {
       <View style={[styles.container, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 30 }]}>
 
         {/* BACK */}
-        <Animated.View 
-          // entering={FadeInUp.duration(300)}
-          >
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Icon name="chevron-left" size={28} color="#1A1A1A" />
-          </TouchableOpacity>
-        </Animated.View>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Icon name="chevron-left" size={28} color="#1A1A1A" />
+        </TouchableOpacity>
 
         {/* TÍTULO */}
-        <Animated.View 
-          // entering={FadeInUp.delay(100).springify().damping(25)} 
-          style={styles.titleWrapper}>
+        <View style={styles.titleWrapper}>
           <Text style={styles.title}>¿Olvidaste tu{'\n'}contraseña?</Text>
           <Text style={styles.subtitle}>
             Ingresa tu correo y te enviaremos un enlace para restablecerla.
           </Text>
-        </Animated.View>
+        </View>
 
         {/* FORMULARIO o ÉXITO */}
         {!sent ? (
-          <Animated.View 
-            // entering={FadeInDown.delay(200).springify().damping(25)} 
-            style={styles.form}>
+          <View style={styles.form}>
             <View style={styles.inputWrapper}>
               <TextInput
                 style={styles.input}
@@ -103,21 +96,20 @@ export const ForgotPasswordScreen = () => {
                 : <Text style={styles.btnSendText}>Enviar enlace</Text>
               }
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         ) : (
-          <Animated.View
-            // entering={FadeInDown.delay(100).springify().damping(25)}
-            style={styles.successBox}
-          >
+          // ── Estado de éxito ──
+          <View style={styles.successBox}>
             <View style={styles.successIconCircle}>
               <Icon name="email-check-outline" size={40} color={COLORS.primary} />
             </View>
             <Text style={styles.successTitle}>¡Correo enviado!</Text>
             <Text style={styles.successMsg}>
-              Revisa tu bandeja de entrada (y spam) en{' '}
+              Si existe una cuenta con{' '}
               <Text style={{ fontFamily: TYPOGRAPHY.primary.semiBold, color: '#1A1A1A' }}>
                 {email}
               </Text>
+              , recibirás un enlace para restablecer tu contraseña. Revisa también la carpeta de spam.
             </Text>
 
             <TouchableOpacity
@@ -126,7 +118,7 @@ export const ForgotPasswordScreen = () => {
             >
               <Text style={styles.btnBackText}>Volver al Login</Text>
             </TouchableOpacity>
-          </Animated.View>
+          </View>
         )}
       </View>
     </KeyboardAvoidingView>
