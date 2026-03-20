@@ -69,13 +69,11 @@ export const SignUpScreen = () => {
   }, []);
   const breathingStyle = useAnimatedStyle(() => ({ transform: [{ scale: breathing.value }] }));
 
-  // Tamaños dinámicos del grid
   const horizontalPadding = 24;
   const gap                = 16;
   const avatarWrapperWidth = (screenWidth - horizontalPadding * 2 - gap) / 2;
   const circleSize         = avatarWrapperWidth * 0.78;
 
-  // ─── REGISTRO EMAIL / PASSWORD ────────────────────────────────────────────
   const handleRegister = async () => {
     if (username.trim().length < 3) { Alert.alert('Nombre muy corto', 'Mínimo 3 caracteres.'); return; }
     if (!email.trim())              { Alert.alert('Campo vacío', 'Ingresa tu correo.'); return; }
@@ -103,7 +101,6 @@ export const SignUpScreen = () => {
     }
   };
 
-  // ─── REGISTRO CON GOOGLE ──────────────────────────────────────────────────
   const handleGoogleRegister = async () => {
   setGoogleLoad(true);
   try {
@@ -141,7 +138,6 @@ export const SignUpScreen = () => {
   }
 };
 
-  // ─── RENDER ──────────────────────────────────────────────────────────────
   return (
     <View style={styles.root}>
       <KeyboardAvoidingView
@@ -321,7 +317,6 @@ export const SignUpScreen = () => {
   );
 };
 
-// ─── Mapeo de errores ─────────────────────────────────────────────────────────
 const mapFirebaseError = (code: string): string => {
   switch (code) {
     case 'auth/email-already-in-use': return 'Ya existe una cuenta con ese correo.';
@@ -331,7 +326,6 @@ const mapFirebaseError = (code: string): string => {
   }
 };
 
-// ─── Estilos ──────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   root:   { flex: 1, backgroundColor: '#FFF' },
   scroll: { flexGrow: 1, paddingHorizontal: 24 },

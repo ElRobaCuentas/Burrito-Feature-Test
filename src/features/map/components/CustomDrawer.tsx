@@ -123,7 +123,7 @@ export const CustomDrawer = () => {
     closeDrawer();
     setTimeout(async () => {
       try {
-        await analytics().logEvent('sesion_cerrada'); // ← NUEVO
+        await analytics().logEvent('sesion_cerrada'); 
         await firebaseAuth.signOut();
         const currentGoogleUser = GoogleSignin.getCurrentUser();
         if (currentGoogleUser) {
@@ -149,7 +149,6 @@ export const CustomDrawer = () => {
           <Text style={styles.brandText}>EL BURRITO</Text>
         </LinearGradient>
 
-        {/* ── AVATAR: view exterior para sombra, view interior para recorte ── */}
         <View style={styles.avatarWrapper}>
           <View style={[styles.avatarShadow, { borderColor: theme.bg }]}>
             <View style={styles.avatarClip}>
@@ -172,7 +171,6 @@ export const CustomDrawer = () => {
           </View>
         </View>
 
-        {/* ── CONTENIDO PRINCIPAL (sin logout) ── */}
         <View style={styles.content}>
           <View style={styles.bentoRow}>
             <View style={[styles.bentoCard, { backgroundColor: theme.card }]}>
@@ -227,7 +225,6 @@ export const CustomDrawer = () => {
                       setIsExpanding(false); 
                     }}
                   >
-                    {/* ── Mini avatar: misma técnica de doble view ── */}
                     <View style={styles.smallAvatarShadow}>
                       <View style={styles.smallAvatarClip}>
                         <Image source={AVATAR_IMAGES[item.id]} style={styles.smallAvatarImg} />
@@ -241,7 +238,6 @@ export const CustomDrawer = () => {
           </Animated.View>
         </View>
 
-        {/* ── FOOTER: cerrar sesión + versión al fondo ── */}
         <View style={styles.footer}>
           <TouchableOpacity 
             style={[styles.logoutButton, { backgroundColor: isDarkMode ? 'rgba(255,82,82,0.05)' : '#FFF5F5' }]} 
@@ -327,7 +323,6 @@ const styles = StyleSheet.create({
   header:    { height: 160, paddingTop: 40, alignItems: 'center' },
   brandText: { color: 'white', fontSize: 14, fontFamily: TYPOGRAPHY.primary.bold, opacity: 0.9, letterSpacing: 2, marginTop: 18 },  
   
-  // ── Avatar principal: sombra separada del recorte ──
   avatarWrapper:  { alignItems: 'center', marginTop: -50, marginBottom: 10 },
   avatarShadow: {
     width: 100, height: 100, borderRadius: 50,
@@ -339,7 +334,7 @@ const styles = StyleSheet.create({
   avatarClip: {
     width: '100%', height: '100%',
     borderRadius: 50,
-    overflow: 'hidden',       // ← el recorte real
+    overflow: 'hidden',      
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#F0F0F0',

@@ -25,7 +25,6 @@ import LinearGradient from 'react-native-linear-gradient';
 
 const Drawer = createDrawerNavigator();
 
-// 3️⃣ MAPEO DE TUS IMÁGENES (IGUAL QUE EN LOGIN)
 const AVATAR_IMAGES: Record<AvatarId, any> = {
   economista: require('../../assets/ECONOMISTA.png'),
   humanidades: require('../../assets/HUMANIDADES.png'),
@@ -43,7 +42,6 @@ const CustomDrawerContent = (props: any) => {
   const drawerBg = isDarkMode ? 'rgba(20, 20, 20, 0.97)' : 'rgba(255, 255, 255, 0.95)';
   const cardBg = isDarkMode ? '#252525' : '#FFFFFF';
 
-  // Seleccionamos la imagen correcta, o 'ingeniero' por defecto si falla algo
   const selectedAvatarImage = (avatar && AVATAR_IMAGES[avatar]) 
   ? AVATAR_IMAGES[avatar] 
   : AVATAR_IMAGES.ingeniero;
@@ -144,7 +142,7 @@ export const DrawerNavigator = () => {
         drawerInactiveTintColor: '#666',
         drawerItemStyle: { borderRadius: 15, paddingLeft: 10, marginVertical: 5 },
         drawerLabelStyle: { fontWeight: '700', marginLeft: -10, fontSize: 15 },
-        drawerActiveBackgroundColor: COLORS.primary + '15', // Color primario muy clarito al seleccionar
+        drawerActiveBackgroundColor: COLORS.primary + '15', 
       } as any}>
       <Drawer.Screen
         name="MapScreen"

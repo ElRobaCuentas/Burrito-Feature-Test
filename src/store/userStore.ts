@@ -20,7 +20,7 @@ export interface UserState {
   email: string | null; 
   isLoggedIn: boolean; 
   _hasHydrated: boolean;
-  login: (uuid: string, username: string, avatar: AvatarId, email?: string) => void; // 🔥 MODIFICADO: Acepta email opcional
+  login: (uuid: string, username: string, avatar: AvatarId, email?: string) => void; 
   logout: () => void;
   setAvatar: (avatar: AvatarId) => void;
   setHasHydrated: (state: boolean) => void;

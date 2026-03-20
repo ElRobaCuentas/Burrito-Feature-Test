@@ -12,7 +12,6 @@ interface MapBrandingProps {
 }
 
 // Config de los 3 estados del badge de abajo.
-// El pill (B + punto) no cambia por dentro, sigue igual que siempre.
 const SIGNAL_CONFIG = {
   stable: { label: 'EN SERVICIO', bgColor: '#4CAF50' },
   weak:   { label: 'SEÑAL DÉBIL', bgColor: '#FF9800' },
@@ -33,7 +32,6 @@ export const MapBranding = ({ isDarkMode }: MapBrandingProps) => {
     ? ['rgba(30, 30, 30, 0.95)', COLORS.primary + '10']
     : ['#FFFFFF', COLORS.primary + '30'];
 
-  // El punto verde/rojo del pill sigue su lógica original
   const dotColor = (busSignalStatus === 'stable' || busSignalStatus === 'weak') && !isBusOff
     ? '#4CAF50'
     : '#FF5252';
@@ -46,7 +44,6 @@ export const MapBranding = ({ isDarkMode }: MapBrandingProps) => {
         { top: Platform.OS === 'android' ? insets.top + 15 : insets.top + 10 }
       ]}
     >
-      {/* ── PILL ORIGINAL (B + punto) ── sin cambios internos ── */}
       <LinearGradient
         colors={gradientColors}
         start={{ x: 0, y: 0 }}
@@ -59,7 +56,6 @@ export const MapBranding = ({ isDarkMode }: MapBrandingProps) => {
         <View style={[styles.statusDot, { backgroundColor: dotColor }]} />
       </LinearGradient>
 
-      {/* ── BADGE DE ESTADO: flota DEBAJO del pill, mismo ancho ── */}
       <View style={[styles.statusBadge, { backgroundColor: config.bgColor }]}>
         <Text style={styles.statusLabel}>{config.label}</Text>
       </View>
@@ -105,7 +101,6 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 2,
   },
-  // Badge debajo del pill, se estira al mismo ancho automáticamente
   statusBadge: {
     marginTop: 5,
     paddingHorizontal: 10,

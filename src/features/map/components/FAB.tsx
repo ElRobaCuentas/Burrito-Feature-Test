@@ -8,8 +8,6 @@ interface FABProps {
   isFollowingBus: boolean;
   onFollowBus: () => void;
   onCenterMap: () => void;
-  // ✅ NUEVO: cuando el bus está inactivo, el botón de seguimiento se deshabilita.
-  // No tiene sentido permitir "seguir" un bus que no existe en el mapa.
   isBusActive: boolean;
 }
 
@@ -25,7 +23,6 @@ export const FAB = ({ isFollowingBus, onFollowBus, onCenterMap, isBusActive }: F
         }
       ]}
     >
-      {/* Botón de Centrado Panorámico — siempre activo */}
       <TouchableOpacity
         style={styles.button}
         onPress={onCenterMap}
@@ -34,7 +31,6 @@ export const FAB = ({ isFollowingBus, onFollowBus, onCenterMap, isBusActive }: F
         <Icon name="map-outline" size={24} color="#1A1A1A" />
       </TouchableOpacity>
 
-      {/* Botón de Seguimiento al Burrito — deshabilitado si el bus está inactivo */}
       <TouchableOpacity
         style={[
           styles.button,
@@ -79,7 +75,6 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     elevation: 12,
   },
-  // ✅ Estado visual cuando el bus está descansando
   buttonDisabled: {
     backgroundColor: '#F0F0F0',
     elevation: 2,

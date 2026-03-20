@@ -7,8 +7,8 @@ interface FeedbackData {
   avatar:   string;
   rating:   number;
   mensaje:  string;
-  uid:      string;   // ← NUEVO
-  email:    string;   // ← NUEVO
+  uid:      string;   
+  email:    string;  
 }
 
 const BURRITO_LOCATION_PATH = '/ubicacion_burrito';
@@ -43,7 +43,6 @@ export const MapService = {
             
             await feedbackRef.set({
                 ...data,
-                // 🔥 QA FIX: Usamos el reloj atómico del servidor de Google
                 timestamp: database.ServerValue.TIMESTAMP, 
             });
             

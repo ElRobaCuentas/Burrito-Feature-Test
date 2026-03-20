@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Appearance } from 'react-native'; // Importamos el motor de UI de React Native
+import { Appearance } from 'react-native'; 
 
 interface ThemeState {
   isDarkMode: boolean;

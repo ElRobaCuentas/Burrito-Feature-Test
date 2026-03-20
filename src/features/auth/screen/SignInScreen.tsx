@@ -65,7 +65,7 @@ export const SignInScreen = () => {
         ultimaConexion: database.ServerValue.TIMESTAMP,
       });
       
-      await analytics().logEvent('sesion_email'); // ← NUEVO
+      await analytics().logEvent('sesion_email'); 
       login(uid, data.nombre, data.avatar as AvatarId, data.email);
 
     } catch (error: any) {

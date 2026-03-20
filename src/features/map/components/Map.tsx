@@ -290,7 +290,7 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
               activeOpacity={0.6}
               onPress={() => {
                 ReactNativeHapticFeedback.trigger("impactLight", hapticOptions);
-                analytics().logEvent('paradero_tocado', { nombre: p.name }); // ← NUEVO
+                analytics().logEvent('paradero_tocado', { nombre: p.name });
                 setSelectedStopId(prev => prev === p.id ? null : p.id);
               }}
               hitSlop={{ top: 15, bottom: 15, left: 15, right: 15 }} 

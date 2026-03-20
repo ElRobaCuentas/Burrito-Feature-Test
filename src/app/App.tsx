@@ -1,4 +1,3 @@
-// src/app/App.tsx
 import React, { useEffect, useState, useRef } from 'react'; 
 import { View, StyleSheet, StatusBar, AppState, AppStateStatus } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
@@ -8,7 +7,7 @@ import database from '@react-native-firebase/database';
 import auth from '@react-native-firebase/auth';
 
 import { GoogleSignin } from '@react-native-google-signin/google-signin';
-import { GOOGLE_WEB_CLIENT_ID } from '@env'; // ← NUEVO IMPORT SEGURO
+import { GOOGLE_WEB_CLIENT_ID } from '@env';
 
 import { StackNavigator } from './navigations/StackNavigator';
 import { useUserStore } from '../store/userStore'; 
@@ -61,7 +60,6 @@ const App = () => {
     return () => subscription.remove();
   }, []);
 
-  // ── Tema ──────────────────────────────────────────────────────────────────
   useEffect(() => {
     loadThemeFromStorage();
   }, []);

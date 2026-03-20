@@ -19,6 +19,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import database from '@react-native-firebase/database';
+import Icon from 'react-native-vector-icons/MaterialCommunityIcons'; // ← NUEVO
 
 import { RootStackParams }                from '../../../app/navigations/StackNavigator';
 import { firebaseDatabase }               from '../../../shared/config/firebase';
@@ -43,18 +44,15 @@ export const AvatarPickerScreen = () => {
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
   const { login }  = useUserStore();
 
-  // Params del flujo Google
   const { uid, displayName, email } = route.params;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading,    setLoading]    = useState(false);
 
-  // ── Animaciones ──
   const sheetY          = useSharedValue(screenHeight);
   const backdropOpacity = useSharedValue(0);
   const breathing       = useSharedValue(1);
 
-  // Grid sizes
   const horizontalPadding = 24;
   const gap                = 16;
   const avatarWrapperWidth = (screenWidth - horizontalPadding * 2 - gap) / 2;
@@ -115,7 +113,6 @@ export const AvatarPickerScreen = () => {
     <View style={styles.root}>
       <View style={[styles.container, { paddingTop: insets.top + 24 }]}>
 
-        {/* ENCABEZADO */}
         <Animated.View entering={FadeInUp.delay(100).springify().damping(25)} style={styles.header}>
           <Text style={styles.step}>ÚLTIMO PASO</Text>
           <Text style={styles.title}>Elige tu facultad</Text>
@@ -125,7 +122,6 @@ export const AvatarPickerScreen = () => {
           </Text>
         </Animated.View>
 
-        {/* GRID DE AVATARES */}
         <Animated.View
           entering={FadeInDown.delay(200).springify().damping(25)}
           style={[styles.avatarGrid, { gap }]}
@@ -150,24 +146,38 @@ export const AvatarPickerScreen = () => {
                     height: circleSize,
                     borderRadius: circleSize / 2,
                     backgroundColor: item.color + '22',
+                    overflow: 'hidden', // ← NUEVO
                   },
                   selectedId === item.id && { backgroundColor: item.color + '40' },
                 ]}>
-                  <Image source={item.url} style={styles.imageAvatar} />
+                  <Image
+                    source={item.url}
+                    style={[
+                      styles.imageAvatar,
+                      { width: circleSize, height: circleSize, borderRadius: circleSize / 2 }, // ← NUEVO
+                    ]}
+                    resizeMode="cover" 
+                  />
                 </View>
+
                 <Text style={[
                   styles.avatarLabel,
                   selectedId === item.id && { color: item.color, fontFamily: TYPOGRAPHY.primary.bold },
                 ]}>
                   {item.label}
                 </Text>
+
+                {selectedId === item.id && (
+                  <View style={[styles.checkBadge, { backgroundColor: item.color }]}>
+                    <Icon name="check" size={10} color="#FFF" />
+                  </View>
+                )}
               </TouchableOpacity>
             </Animated.View>
           ))}
         </Animated.View>
       </View>
 
-      {/* ── BACKDROP ── */}
       <Animated.View
         style={[styles.backdrop, backdropStyle]}
         pointerEvents={selectedId ? 'auto' : 'none'}
@@ -177,7 +187,6 @@ export const AvatarPickerScreen = () => {
         </TouchableWithoutFeedback>
       </Animated.View>
 
-      {/* ── BOTTOM SHEET ── */}
       <Animated.View style={[styles.bottomSheet, sheetStyle]}>
         {selectedAvatar && (
           <Animated.View entering={FadeIn} style={styles.heroAvatarContainer}>
@@ -238,15 +247,16 @@ const styles = StyleSheet.create({
     color: COLORS.primary,
   },
 
-  avatarGrid: { flexDirection: 'row', flexWrap: 'wrap' },
+  avatarGrid:   { flexDirection: 'row', flexWrap: 'wrap' },
   avatarButton: {
     alignItems: 'center',
     borderRadius: 18,
     padding: 8,
     marginBottom: 8,
   },
-  circle:      { justifyContent: 'center', alignItems: 'center' },
-  imageAvatar: { width: '75%', height: '75%', resizeMode: 'contain' },
+  circle: { justifyContent: 'center', alignItems: 'center' },
+  imageAvatar: {
+  },
   avatarLabel: {
     marginTop: 8,
     fontSize: 10,
@@ -254,6 +264,17 @@ const styles = StyleSheet.create({
     color: '#888',
     textAlign: 'center',
     letterSpacing: 0.5,
+  },
+  // ── NUEVO ──
+  checkBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 
   backdrop: {
@@ -276,7 +297,7 @@ const styles = StyleSheet.create({
     zIndex: 20,
     elevation: 20,
   },
-  sheetHandle: { width: 40, height: 5, backgroundColor: '#E0E0E0', borderRadius: 3, marginBottom: 20 },
+  sheetHandle:         { width: 40, height: 5, backgroundColor: '#E0E0E0', borderRadius: 3, marginBottom: 20 },
   heroAvatarContainer: { alignItems: 'center', marginBottom: 8 },
   heroCircle: {
     width: 120,
@@ -297,8 +318,8 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     width: '100%',
   },
-  btnDisabled:     { opacity: 0.6 },
-  btnConfirmText:  { color: '#FFF', fontSize: 16, fontFamily: TYPOGRAPHY.primary.semiBold },
+  btnDisabled:    { opacity: 0.6 },
+  btnConfirmText: { color: '#FFF', fontSize: 16, fontFamily: TYPOGRAPHY.primary.semiBold },
   btnCancel: {
     paddingVertical: 10,
     alignItems: 'center',

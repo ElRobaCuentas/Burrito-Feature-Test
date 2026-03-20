@@ -4,10 +4,8 @@ import { DrawerContentComponentProps, DrawerContentScrollView, DrawerItemList } 
 import { useUserStore } from '../../../store/userStore';
 
 export const CustomDrawerContent = (props: DrawerContentComponentProps) => {
-  // Extraemos los datos del usuario desde Zustand
   const { username, avatar } = useUserStore();
 
-  // Mapeamos el ID del avatar al color correspondiente (debe coincidir con LoginScreen)
   const getAvatarColor = (id: string | null) => {
     const colors: { [key: string]: string } = {
       av1: '#FFBD59',
@@ -20,7 +18,6 @@ export const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
   return (
     <DrawerContentScrollView {...props} contentContainerStyle={styles.container}>
-      {/* SECCIÓN DE PERFIL */}
       <View style={styles.profileSection}>
         <View style={[styles.avatarCircle, { backgroundColor: getAvatarColor(avatar) }]}>
           <Text style={styles.avatarLetter}>
@@ -33,7 +30,6 @@ export const CustomDrawerContent = (props: DrawerContentComponentProps) => {
 
       <View style={styles.divider} />
 
-      {/* LISTA DE OPCIONES DEL MENÚ (Rutas del Drawer) */}
       <DrawerItemList {...props} />
     </DrawerContentScrollView>
   );

@@ -105,7 +105,6 @@ export const ForgotPasswordScreen = () => {
             </TouchableOpacity>
           </Animated.View>
         ) : (
-          // ── Estado de éxito ──
           <Animated.View
             // entering={FadeInDown.delay(100).springify().damping(25)}
             style={styles.successBox}

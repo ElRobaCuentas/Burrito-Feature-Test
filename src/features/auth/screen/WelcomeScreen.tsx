@@ -47,7 +47,6 @@ export const WelcomeScreen = () => {
         </Text>
       </Animated.View>
 
-      {/* ── BOTONES ── */}
       <Animated.View
         // entering={FadeInDown.delay(500).springify().damping(25)}
         style={[styles.btnContainer, { paddingBottom: insets.bottom + 40 }]}
@@ -77,7 +76,7 @@ export const WelcomeScreen = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF', // Fondo blanco puro
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
@@ -113,7 +112,6 @@ const styles = StyleSheet.create({
     borderRadius: 18, 
     paddingVertical: 18, 
     alignItems: 'center',
-    // Sombra más sutil para fondo blanco
     shadowColor: '#00AEEF',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
@@ -127,7 +125,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   btnRegister: {
-    backgroundColor: '#F8FAFC', // Un blanco grisáceo muy leve para dar contraste
+    backgroundColor: '#F8FAFC',
     borderRadius: 18,
     paddingVertical: 18,
     alignItems: 'center',

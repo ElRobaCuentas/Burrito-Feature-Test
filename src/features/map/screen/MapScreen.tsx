@@ -13,7 +13,7 @@ import { useBurritoStore } from '../../../store/burritoLocationStore';
 import { useThemeStore } from '../../../store/themeStore';
 import { useMapStore } from '../../../store/mapStore';
 import { useDrawerStore } from '../../../store/drawerStore';
-import { useUserStore } from '../../../store/userStore'; // ← NUEVO para Analytics
+import { useUserStore } from '../../../store/userStore'; 
 import { Map } from '../components/Map';
 import { FAB } from '../components/FAB';
 import { CustomDrawer } from '../components/CustomDrawer';
@@ -21,7 +21,7 @@ import { MapBranding } from '../components/MapBranding';
 import Icon from 'react-native-vector-icons/MaterialCommunityIcons';
 import { TYPOGRAPHY } from '../../../shared/theme/typography';
 import ReactNativeHapticFeedback from "react-native-haptic-feedback";
-import analytics from '@react-native-firebase/analytics'; // ← NUEVO
+import analytics from '@react-native-firebase/analytics'; 
 
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, { FadeOut } from 'react-native-reanimated';
@@ -51,7 +51,6 @@ export const MapScreen = () => {
     actions.startTracking();
     const timer = setTimeout(() => setMinTimeReached(true), 1500);
 
-    // ← NUEVO: Analytics Inicial
     const initAnalytics = async () => {
       try {
         const uid = useUserStore.getState().uuid ?? 'anonimo';
@@ -159,11 +158,11 @@ export const MapScreen = () => {
             <FAB
               isFollowingBus={isFollowing}
               onFollowBus={() => {
-                analytics().logEvent('bus_seguido'); // ← NUEVO
+                analytics().logEvent('bus_seguido'); 
                 setCommand('follow');
               }}
               onCenterMap={() => {
-                analytics().logEvent('mapa_centrado'); // ← NUEVO
+                analytics().logEvent('mapa_centrado'); 
                 setCommand('center');
               }}
               isBusActive={isBusActive}

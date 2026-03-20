@@ -36,13 +36,10 @@ export const StopCardSkeleton = ({ isDarkMode }: { isDarkMode: boolean }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: isDarkMode ? '#1E1E1E' : '#FFF' }]}>
-      {/* Barra de Título */}
       <View style={[styles.bar, { backgroundColor: theme.bg, width: '70%' }]} />
       
-      {/* Barra de Subtítulo/Info */}
       <View style={[styles.bar, { backgroundColor: theme.bg, width: '40%', height: 12, marginTop: 10 }]} />
 
-      {/* El Brillo que se mueve */}
       <Animated.View style={[StyleSheet.absoluteFill, animatedStyle]}>
         <LinearGradient
           colors={theme.shimmer}
