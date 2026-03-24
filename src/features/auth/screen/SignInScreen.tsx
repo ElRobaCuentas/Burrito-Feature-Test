@@ -85,7 +85,6 @@ export const SignInScreen = () => {
 
   // ─── LOGIN GOOGLE ─────────────────────────────────────────────────────────
   const handleGoogleLogin = async () => {
-    crashlytics().crash();
     if (googleLoad) return; // FIX D: evita doble tap
     setGoogleLoad(true);
     try {
