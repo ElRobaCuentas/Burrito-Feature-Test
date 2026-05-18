@@ -43,18 +43,18 @@ const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: numbe
   return R * c; 
 };
 
-const snapToRoute = (lat: number, lng: number) => {
-  let minDistance = Infinity;
-  let closestPoint = [lng, lat]; 
-  RUTA_GEOJSON.geometry.coordinates.forEach((coord: number[]) => {
-    const dist = calculateDistance(lat, lng, coord[1], coord[0]);
-    if (dist < minDistance) {
-      minDistance = dist;
-      closestPoint = coord; 
-    }
-  });
-  return closestPoint; 
-};
+// const snapToRoute = (lat: number, lng: number) => {
+//   let minDistance = Infinity;
+//   let closestPoint = [lng, lat]; 
+//   RUTA_GEOJSON.geometry.coordinates.forEach((coord: number[]) => {
+//     const dist = calculateDistance(lat, lng, coord[1], coord[0]);
+//     if (dist < minDistance) {
+//       minDistance = dist;
+//       closestPoint = coord; 
+//     }
+//   });
+//   return closestPoint; 
+// };
 
 export const Map = ({ burritoLocation, isDarkMode }: any) => {
   const cameraRef = useRef<Mapbox.Camera>(null);
@@ -127,7 +127,8 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
     if (burritoLocation) {
       if (burritoLocation.isActive === false) return; 
 
-      const snappedCoords = snapToRoute(burritoLocation.latitude, burritoLocation.longitude);
+      // const snappedCoords = snapToRoute(burritoLocation.latitude, burritoLocation.longitude);
+      const rawCoords = [burritoLocation.longitude, burritoLocation.latitude];
       
       const timeStr = burritoLocation.timestamp ? String(burritoLocation.timestamp).slice(-6) : 'N/A';
       const logMsg = `T:${timeStr} | L:${burritoLocation.latitude.toFixed(4)},${burritoLocation.longitude.toFixed(4)}`;
@@ -138,9 +139,9 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
       });
 
       if (isFirstBusLoad) {
-        latAnim.setValue(snappedCoords[1]);
-        lngAnim.setValue(snappedCoords[0]);
-        setCurrentPos(snappedCoords);
+        lngAnim.setValue(rawCoords[0]); 
+        setCurrentPos(rawCoords);       
+        latAnim.setValue(rawCoords[1]); 
         setCurrentHeading((burritoLocation.heading || 0) - 90);
         setIsFirstBusLoad(false); 
       } else {
@@ -148,8 +149,8 @@ export const Map = ({ burritoLocation, isDarkMode }: any) => {
         lngAnim.stopAnimation();
 
         RNAnimated.parallel([
-          RNAnimated.timing(latAnim, { toValue: snappedCoords[1], duration: 2000, easing: RNEasing.linear, useNativeDriver: false }),
-          RNAnimated.timing(lngAnim, { toValue: snappedCoords[0], duration: 2000, easing: RNEasing.linear, useNativeDriver: false }),
+          RNAnimated.timing(latAnim, { toValue: rawCoords[1], duration: 2000, easing: RNEasing.linear, useNativeDriver: false }),
+          RNAnimated.timing(lngAnim, { toValue: rawCoords[0], duration: 2000, easing: RNEasing.linear, useNativeDriver: false }),
         ]).start();
         
         setCurrentHeading((burritoLocation.heading || 0) - 90);
