@@ -17,8 +17,17 @@ export interface Bus {
   activo: boolean;
 }
 
+export interface Asignacion {
+  id: string; 
+  choferId: string; 
+  busId: string; 
+  fecha: string; 
+  activo: boolean;
+}
+
 const CHOFERES_PATH = '/choferes';
 const BUSES_PATH = '/buses';
+const ASIGNACIONES_PATH = '/asignaciones';
 
 export const AdminService = {
   // ============================
@@ -167,5 +176,94 @@ export const AdminService = {
       console.error('Error actualizando estado del bus:', error);
       return false;
     }
+  },
+
+  // ============================
+  // GESTIÓN DE ASIGNACIONES (T09)
+  // ============================
+
+  // 1. Obtener fecha de hoy en formato local (YYYY-MM-DD)
+  getTodayDateString: () => {
+    const today = new Date();
+    return `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  },
+
+  // 2. Escuchar asignaciones de HOY en tiempo real
+  subscribeToAsignacionesHoy: (onUpdate: (asignaciones: Asignacion[]) => void) => {
+    const today = AdminService.getTodayDateString();
+    const ref = firebaseDatabase.ref(ASIGNACIONES_PATH);
+    
+    const onValueChange = ref.on(
+      'value',
+      (snapshot) => {
+        const data = snapshot.val();
+        if (!data) {
+          onUpdate([]);
+          return;
+        }
+        
+        const parsed: Asignacion[] = [];
+        Object.keys(data).forEach(key => {
+          const item = data[key];
+          // Solo filtramos las de hoy y que estén activas (para la vista principal)
+          if (item.fecha === today && item.activo === true) {
+            parsed.push({ id: key, ...item });
+          }
+        });
+        onUpdate(parsed);
+      },
+      (error) => {
+        console.error('[Firebase Error - Asignaciones]:', error);
+        onUpdate([]);
+      }
+    );
+    return () => ref.off('value', onValueChange);
+  },
+
+
+  // 3. Crear Asignación
+  createAsignacion: async (choferId: string, busId: string) => {
+    const today = AdminService.getTodayDateString();
+    const ref = firebaseDatabase.ref(ASIGNACIONES_PATH);
+    
+    // Validar exclusividad (El chofer y el bus no deben estar ya asignados hoy)
+    const snapshot = await ref.once('value');
+    if (snapshot.exists()) {
+      const data = snapshot.val();
+      const yaAsignadoChofer = Object.values(data).some(
+        (a: any) => a.choferId === choferId && a.fecha === today && a.activo === true
+      );
+      if (yaAsignadoChofer) throw new Error('El conductor ya tiene un bus asignado hoy.');
+
+      const yaAsignadoBus = Object.values(data).some(
+        (a: any) => a.busId === busId && a.fecha === today && a.activo === true
+      );
+      if (yaAsignadoBus) throw new Error('Este bus ya fue asignado a otro conductor hoy.');
+    }
+
+    const newRef = ref.push();
+    await newRef.set({
+      choferId,
+      busId,
+      fecha: today,
+      activo: true
+    });
+    return true;
+  },
+
+  // 4. Cancelar Asignación (Desactivarla)
+  cancelarAsignacion: async (asignacionId: string) => {
+    try {
+      await firebaseDatabase.ref(`${ASIGNACIONES_PATH}/${asignacionId}`).update({
+        activo: false
+      });
+      return true;
+    } catch (error) {
+      console.error('Error cancelando asignación:', error);
+      return false;
+    }
   }
+
 };
+
+
