@@ -41,7 +41,17 @@ export const AdminPanelScreen = () => {
           </View>
         </TouchableOpacity>
 
-        {/* Los siguientes módulos se agregarán en las próximas tareas */}
+        {/* BOTÓN GESTIÓN DE BUSES */}
+        <TouchableOpacity 
+          style={styles.menuButton}
+          onPress={() => navigation.navigate('AsignacionesScreen')}
+        >
+          <Text style={styles.buttonEmoji}>📋</Text>
+          <View style={styles.buttonTextContainer}>
+            <Text style={styles.buttonTitle}>Asignaciones Diarias</Text>
+            <Text style={styles.buttonDescription}>Vincular conductores con vehículos para el turno de hoy</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     </View>
   );

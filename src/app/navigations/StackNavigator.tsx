@@ -12,6 +12,8 @@ import { SignUpScreen }           from '../../features/auth/screen/SignUpScreen'
 import { AdminPanelScreen }       from '../../features/admin/screen/AdminPanelScreen';
 import { ChoferesScreen }         from '../../features/admin/screen/ChoferesScreen';
 import { BusesScreen }            from '../../features/admin/screen/BusesScreen';
+import { AsignacionesScreen }     from '../../features/admin/screen/AsignacionesScreen'; 
+
 
 export type RootStackParams = {
   WelcomeScreen:        undefined;
@@ -23,6 +25,7 @@ export type RootStackParams = {
   AdminPanelScreen:     undefined;
   ChoferesScreen:       undefined;
   BusesScreen:          undefined;
+  AsignacionesScreen:   undefined; 
 };
 
 const Stack = createStackNavigator<RootStackParams>();
@@ -43,6 +46,7 @@ export const StackNavigator = () => {
           <Stack.Screen name="AdminPanelScreen" component={AdminPanelScreen} />
           <Stack.Screen name="ChoferesScreen" component={ChoferesScreen} options={{ title: 'Gestión de Conductores' }} />
           <Stack.Screen name="BusesScreen" component={BusesScreen} options={{ title: 'Gestión de Flota' }} />
+          <Stack.Screen name="AsignacionesScreen" component={AsignacionesScreen} options={{ title: 'Asignaciones' }} /> 
         </>
       ) : ( 
         <>
