@@ -17,7 +17,7 @@ Prettier 2.8.8: single quotes, no parens on arrow fns, trailing commas.
 ## Architecture
 
 - **Entrypoint**: `index.js` → `src/app/App.tsx`
-- **Feature-first** folders under `src/features/`: `auth/`, `map/`, `admin/` — each with its own `screen/`, `components/`, `services/`
+- **Feature-first** folders under `src/features/`: `auth/` (screen only), `map/` (components/, constants/, screen/, services/), `admin/` (screen/, services/)
 - **State**: 5 Zustand stores in `src/store/` — `userStore` (persisted via zustand/persist + AsyncStorage), `themeStore` (manual AsyncStorage), `mapStore`, `burritoLocationStore`, `drawerStore` (all ephemeral)
 - **Auth gating**: declarative in `StackNavigator.tsx` — renders different screen groups based on `isLoggedIn`; no manual route guards
 - **Navigation**: `@react-navigation/stack` (root) + `@react-navigation/drawer` (MapScreen + theme toggle)
@@ -30,11 +30,11 @@ Prettier 2.8.8: single quotes, no parens on arrow fns, trailing commas.
 - **Babel plugin order**: `react-native-reanimated/plugin` must be **last** in `babel.config.js` plugins array
 - **Env vars**: accessed via `import { VAR } from '@env'` (typed in `env.d.ts`). Published in `.env` (gitignored). Two vars: `MAPBOX_PUBLIC_TOKEN`, `GOOGLE_WEB_CLIENT_ID`
 - **Fonts**: linked in `react-native.config.js` from `src/assets/fonts/` (Algerian, Poppins weights)
-- **Bus tracking**: `burritoLocationStore.startTracking()` subscribes to Firebase RTDB `/ubicacion_burrito`. Throttles stale data >12s. Caller must pair with `stopTracking()` for cleanup
+- **Bus tracking**: `burritoLocationStore.startTracking()` subscribes to Firebase RTDB `/ubicacion_burrito`. Filters out timestamps older than current (dedup), classifies status based on age (<12s = moving, >=12s = stopped, isActive=false = offline). Caller must pair with `stopTracking()` for cleanup
 - **Hydration gating**: `App.tsx` waits for both `userStore._hasHydrated` and `themeStore._hasHydrated` before rendering `NavigationContainer`
-- **Python simulator**: `simulador_burrito.py` (in repo root) writes fake GPS to RTDB for testing live bus tracking without real hardware. Requires `venv/` + `requirements.txt` (gitignored)
+- **Python simulator**: `simulador_burrito.py` (in repo root) writes fake GPS to RTDB for testing live bus tracking without real hardware. Requires `venv/` + `requirements.txt`
 - **Service key**: `serviceAccountKey.json` is gitignored — do not commit
-- **Dark mode**: persisted manually (not via zustand persist middleware). Follows system on first launch, then manual toggle
+- **Dark mode**: persisted manually (not via zustand persist middleware). Drawer useEffect calls `setTheme(systemColorScheme === 'dark')` on every mount, overriding persisted value — manual toggle only applies within a session
 
 ## Testing
 
